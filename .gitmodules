@@ -1,0 +1,6 @@
+[submodule "redis-plus-plus"]
+	path = redis-plus-plus
+	url = https://github.com/sewenew/redis-plus-plus.git
+[submodule "hiredis"]
+	path = hiredis
+	url = https://github.com/redis/hiredis.git
