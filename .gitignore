@@ -23,6 +23,7 @@ redis-plus-plus/build
 .deps/
 build/
 depcomp
-include/
+include/hiredis/
+include/sw/
 lib/
 share/

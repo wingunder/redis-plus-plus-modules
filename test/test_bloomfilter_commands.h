@@ -17,7 +17,7 @@
 #ifndef REDIS_MODULE_TEST_BLOOMFILTER_COMMAND_H
 #define REDIS_MODULE_TEST_BLOOMFILTER_COMMAND_H
 
-#include "../src/bloomfilter.h"
+#include <RedisBloom/BloomFilter.h>
 
 namespace redis::module::test {
 
