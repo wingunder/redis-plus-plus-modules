@@ -5,10 +5,12 @@
 - [Design](#design)
 - [Building](#building)
 - [Quickstart](#quickstart)
+- [APIs](#apis)
 - [TODO](#todo)
 - [Conclusion](#conclusion)
 - [Contributing](#contributing)
 - [Authors](#authors)
+- [Copyright](#copyright)
 - [History](#history)
 - [Links](#links)
 
@@ -53,14 +55,40 @@ LD_LIBRARY_PATH=./lib ./test/test_redisbloom
 
 ## Quickstart
 
-Nothing yet, but look at the `./test` directory for some hints.
+First of all you'll need to hav access to a Redis database with the
+module(s) loaded, that you'd like to program against. The fastest way
+to get started with this is to simply head off to
+[redismod](https://github.com/RedisLabsModules/redismod) and follow
+their instructions to get a docker image installed and running, which
+will supply this.
+
+Once your Redis database is set up and running, you can run the
+`MODULE LIST` command on it:
+```console
+$ redis-cli MODULE LIST
+1) 1) "name"
+   2) "bf"
+   3) "ver"
+   4) (integer) 20205
+```
+In the above example, only the BloomFilter module is loaded.
+
+Not much more, but look at the `./test` directory for some hints.
+
+## APIs
+
+### RedisBloom
+
+  - [BloomFilter](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
+  - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
+  - [Count-Min-Sketch](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
+  - [Top-K](https://oss.redislabs.com/redisbloom/TopK_Commands/)
 
 ## TODO
 
-  - Finish the BloomFilter (SCANDUMP and LOADCHUNK are still missing)
+  - Add CuckooFilter, Count-Min-Sketch and Top-K
   - Add `Quickstart` content
-  - Add API docs.
-  - Add Cuckoo, Count-Min-Sketch and Top-K
+  - Add doxygen output.
   - Install procedure and at least a Debian package
   - Add APIs for: RedisJSON, RediSearch, RedisTimeSeries, RedisGraph,
     RedisAI and RedisGears
@@ -82,10 +110,15 @@ to open issues and reviews.
 
 ## Authors
 
-*redis-plus-plus-modules* was initially written by [wingunder](https://github.com/wingunder).
+The initial version of *redis-plus-plus-modules* was written by [wingunder](https://github.com/wingunder).
 Some ideas and code originate from
 [sewenew](https://github.com/sewenew) and his amazing
 [redis-plus-plus](https://github.com/sewenew/redis-plus-plus) library.
+
+## Copyright
+
+This software is copyrighted under [Apache Licence V2.0](https://www.apache.org/licenses/LICENSE-2.0).
+
 
 ## History
 
