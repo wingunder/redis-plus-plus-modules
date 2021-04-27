@@ -113,6 +113,14 @@ namespace redis::module::test {
         catch (sw::redis::Error& e) {
             // We're expecting this.
         }
+
+        long long iter = 0;
+        do {
+            std::pair<long long, std::vector<unsigned char>> result;
+            bloomfilter.template scandump(key, iter, result);
+            iter = result.first;
+        } while (iter != 0);
+
         bloomfilter.del(key);
     }
 

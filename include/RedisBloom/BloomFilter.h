@@ -125,8 +125,39 @@ public:
         return sw::redis::reply::parse<long long>(*reply);
     }
 
+    void
+    scandump(const sw::redis::StringView &key, long long iter, std::pair<long long, std::vector<unsigned char>>& result) {
+        std::vector<sw::redis::StringView> args = { "BF.SCANDUMP", key, std::to_string(iter) };
+        auto reply = T::command(args.begin(), args.end());
+        if (!sw::redis::reply::is_array(*reply)) {
+            throw sw::redis::ProtoError("Expect ARRAY reply");
+        }
+
+        if (reply->elements != 2) {
+            throw sw::redis::ProtoError("NOT key-value PAIR reply");
+        }
+
+        if (reply->element == nullptr) {
+            throw sw::redis::ProtoError("Null PAIR reply");
+        }
+
+        auto *first = reply->element[0];
+        auto *second = reply->element[1];
+        if (first == nullptr) {
+            throw sw::redis::ProtoError("Null iterator reply");
+        }
+        else {
+            result.first = first->integer;
+        }
+        result.second.clear();
+        if (second != nullptr) {
+            auto str = sw::redis::reply::parse<std::string>(*second);
+            std::copy(str.begin(), str.end(), std::back_inserter(result.second));
+        }
+    }
+
     template <typename Output>
-    void info(const sw::redis::StringView &key, Output& output) {
+    void info(const sw::redis::StringView &key, Output &output) {
         T::command("BF.INFO", key, std::inserter(output, output.end()));
     }
 
