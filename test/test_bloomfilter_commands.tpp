@@ -31,14 +31,14 @@ namespace redis::module::test {
     void BloomFilterCommand<RedisInstance>::test_commands() {
 
         const std::string key = "newFilter";
-        const int capacity = 5000;
-        const int expansion_rate = 3;
+        const long long capacity = 5000;
+        const long long expansion_rate = 3;
         _redis.del(key);
 
         try {
             // Try to reserve with the wrong error_rate.
             // The error_rate must be > 0 and < 1.
-            auto reserved = _bloomfilter.reserve(key, 100, capacity, false);
+            _bloomfilter.reserve(key, 100, capacity, false);
             REDIS_ASSERT(0, "bf_reserve failed as it should have thrown");
         }
         catch (const sw::redis::Error &e) {
@@ -48,20 +48,16 @@ namespace redis::module::test {
             throw;
         }
 
-        auto reserved = _bloomfilter.reserve(key, 0.1, capacity, false);
-        REDIS_ASSERT(reserved, "bf_reserve failed");
+        _bloomfilter.reserve(key, 0.1, capacity, false);
         _redis.del(key);
 
-        reserved = _bloomfilter.reserve(key, 0.1, capacity, false, expansion_rate);
-        REDIS_ASSERT(reserved, "bf_reserve failed");
+        _bloomfilter.reserve(key, 0.1, capacity, false, expansion_rate);
         _redis.del(key);
 
-        reserved = _bloomfilter.reserve(key, 0.1, capacity, true);
-        REDIS_ASSERT(reserved, "bf_reserve failed");
+        _bloomfilter.reserve(key, 0.1, capacity, true);
         _redis.del(key);
 
-        reserved = _bloomfilter.reserve(key, 0.1, capacity, true, expansion_rate);
-        REDIS_ASSERT(reserved, "bf_reserve failed");
+        _bloomfilter.reserve(key, 0.1, capacity, true, expansion_rate);
 
         auto cnt = _bloomfilter.add(key, "foo");
         REDIS_ASSERT(cnt == 1, "bf_add failed");
@@ -88,15 +84,16 @@ namespace redis::module::test {
                          "bf_mexists failed");
         }
 
+        using Info = std::unordered_map<std::string, sw::redis::OptionalLongLong>;
         {
-            std::unordered_map<std::string, long long> output;
+            Info output;
             _bloomfilter.info(key, output);
             REDIS_ASSERT(!output.empty() &&
-                         output.at("Expansion rate") ==  expansion_rate &&
-                         output.at("Number of items inserted") == 3 &&
-                         //output.at("Size") == 4056 && // voodoo!!!
-                         output.at("Number of filters") == 1 &&
-                         output.at("Capacity") == capacity,
+                         *(output.at("Expansion rate")) == expansion_rate &&
+                         *(output.at("Number of items inserted")) == 3 &&
+                         //*(output.at("Size")) == 4056 && // voodoo!!!
+                         *(output.at("Number of filters")) == 1 &&
+                         *(output.at("Capacity")) == capacity,
                          "bf_info failed");
         }
         _redis.del(key);
@@ -113,15 +110,14 @@ namespace redis::module::test {
             // We're expecting this.
         }
 
-        std::unordered_map<std::string, long long> chunk_info;
+        Info chunk_info;
         _bloomfilter.info(key, chunk_info);
         std::vector<std::pair<long long, std::vector<unsigned char>>> chunks;
         getChunks(key, chunks);
 
         _redis.del(key);
         for (const auto& chunk : chunks) {
-            auto loaded = _bloomfilter.loadchunk(key, chunk);
-            REDIS_ASSERT(loaded, "bf_loadchunk failed");
+            _bloomfilter.loadchunk(key, chunk);
         }
 
         std::vector<std::pair<long long, std::vector<unsigned char>>> verify_chunks;
@@ -146,10 +142,25 @@ namespace redis::module::test {
         }
         //REDIS_ASSERT(chunks == verify_chunks, "bf_loadchunk failed");
 
-        std::unordered_map<std::string, long long> verify_chunk_info;
-        _bloomfilter.info(key, chunk_info);
-        REDIS_ASSERT(chunk_info == verify_chunk_info,
-                     "bf_loadchunk failed as non-matching bf_info was returned");
+        Info verify_chunk_info;
+        _bloomfilter.info(key, verify_chunk_info);
+
+        // The following doesn't work:
+
+        //REDIS_ASSERT(chunk_info == verify_chunk_info,
+        //             "bf_loadchunk failed as non-matching bf_info was returned");
+
+        // So we'll do it the hard way.
+        REDIS_ASSERT(chunk_info.size() == verify_chunk_info.size(),
+                     "bf_loadchunk failed as chunks have different lengths");
+        REDIS_ASSERT(*(chunk_info.at("Expansion rate")) == *(verify_chunk_info.at("Expansion rate")),
+                     "bf_loadchunk failed due to differing 'Expansion rate'");
+        REDIS_ASSERT(*(chunk_info.at("Size")) == *(verify_chunk_info.at("Size")),
+                     "bf_loadchunk failed due to differing 'Size'");
+        REDIS_ASSERT(*(chunk_info.at("Number of filters")) == *(verify_chunk_info.at("Number of filters")),
+                     "bf_loadchunk failed due to differing 'Number of filters'");
+        REDIS_ASSERT(*(chunk_info.at("Capacity")) == *(verify_chunk_info.at("Capacity")),
+                     "bf_loadchunk failed due to differing 'Capacity'");
 
         _redis.del(key);
     }

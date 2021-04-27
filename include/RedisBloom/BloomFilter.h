@@ -37,27 +37,22 @@ public:
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/Bloom_Commands/
 
-    bool reserve(const sw::redis::StringView &key,
+    void reserve(const sw::redis::StringView &key,
                  double error_rate,
                  long long capacity,
                  bool nonscaling,
                  long long expansion = default_expansion_rate) {
         if (nonscaling) {
-            auto reply = _redis.command("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
-            auto result = sw::redis::reply::parse<std::string>(*reply);
-            return (result == "OK");
+            _redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
         }
         else {
-            auto reply = _redis.command("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
-            auto result = sw::redis::reply::parse<std::string>(*reply);
-            return (result == "OK");
+            _redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
         };
     }
 
     long long add(const sw::redis::StringView &key,
                   const sw::redis::StringView &item) {
-        auto reply = _redis.command("BF.ADD",  key, item);
-        return sw::redis::reply::parse<long long>(*reply);
+        return _redis.template command<long long>("BF.ADD",  key, item);
     }
 
     template <typename Input, typename Output>
@@ -110,8 +105,7 @@ public:
 
     long long exists(const sw::redis::StringView &key,
                      const sw::redis::StringView &item) {
-        auto reply = _redis.command("BF.EXISTS",  key, item);
-        return sw::redis::reply::parse<long long>(*reply);
+        return _redis.template command<long long>("BF.EXISTS",  key, item);
     }
 
     long long
@@ -147,12 +141,10 @@ public:
         return result.first;
     }
 
-    bool
+    void
     loadchunk(const sw::redis::StringView &key, const std::pair<long long, std::vector<unsigned char>>& payload) {
         sw::redis::StringView data(reinterpret_cast<const char*>(payload.second.data()), payload.second.size());
-        auto reply = _redis.command("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
-        auto result = sw::redis::reply::parse<std::string>(*reply);
-        return (result == "OK");
+        _redis.template command<void>("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
     }
 
     template <typename Output>
