@@ -25,26 +25,26 @@ namespace redis::module::test {
     class BloomFilterCommand
     {
     public:
-        BloomFilterCommand(const sw::redis::ConnectionOptions &opts)
-            : _opts(opts) {}
+        BloomFilterCommand(RedisInstance &redis)
+            : _redis(redis), _bloomfilter(redis) {}
 
         void run();
 
     private:
-        void test_commands(redis::module::BloomFilter<RedisInstance> &bloom) const;
+        void test_commands();
 
-        void getChunks(redis::module::BloomFilter<RedisInstance>& bloomfilter,
-                       const sw::redis::StringView &key,
-                       std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) const;
+        void getChunks(const sw::redis::StringView &key,
+                       std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks);
 
-        void insertVerify(redis::module::BloomFilter<RedisInstance>& bloomfilter,
-                          const sw::redis::StringView &key,
+        void insertVerify(const sw::redis::StringView &key,
                           double error_rate,
                           long long capacity,
                           bool nonscaling,
                           bool nocreate,
-                          int expansion) const;
-        const sw::redis::ConnectionOptions _opts;
+                          int expansion);
+
+        RedisInstance &_redis;
+        redis::module::BloomFilter<RedisInstance> _bloomfilter;
     };
 
 }

@@ -24,22 +24,21 @@ namespace redis::module::test {
 
     template <typename RedisInstance>
     void BloomFilterCommand<RedisInstance>::run() {
-        redis::module::BloomFilter<RedisInstance> bloom(_opts);
-        test_commands(bloom);
+        test_commands();
     }
 
     template <typename RedisInstance>
-    void BloomFilterCommand<RedisInstance>::test_commands(redis::module::BloomFilter<RedisInstance>& bloomfilter) const {
+    void BloomFilterCommand<RedisInstance>::test_commands() {
 
         const std::string key = "newFilter";
         const int capacity = 5000;
         const int expansion_rate = 3;
-        bloomfilter.del(key);
+        _redis.del(key);
 
         try {
             // Try to reserve with the wrong error_rate.
             // The error_rate must be > 0 and < 1.
-            auto reserved = bloomfilter.reserve(key, 100, capacity, false);
+            auto reserved = _bloomfilter.reserve(key, 100, capacity, false);
             REDIS_ASSERT(0, "bf_reserve failed as it should have thrown");
         }
         catch (const sw::redis::Error &e) {
@@ -49,31 +48,31 @@ namespace redis::module::test {
             throw;
         }
 
-        auto reserved = bloomfilter.reserve(key, 0.1, capacity, false);
+        auto reserved = _bloomfilter.reserve(key, 0.1, capacity, false);
         REDIS_ASSERT(reserved, "bf_reserve failed");
-        bloomfilter.del(key);
+        _redis.del(key);
 
-        reserved = bloomfilter.reserve(key, 0.1, capacity, false, expansion_rate);
+        reserved = _bloomfilter.reserve(key, 0.1, capacity, false, expansion_rate);
         REDIS_ASSERT(reserved, "bf_reserve failed");
-        bloomfilter.del(key);
+        _redis.del(key);
 
-        reserved = bloomfilter.reserve(key, 0.1, capacity, true);
+        reserved = _bloomfilter.reserve(key, 0.1, capacity, true);
         REDIS_ASSERT(reserved, "bf_reserve failed");
-        bloomfilter.del(key);
+        _redis.del(key);
 
-        reserved = bloomfilter.reserve(key, 0.1, capacity, true, expansion_rate);
+        reserved = _bloomfilter.reserve(key, 0.1, capacity, true, expansion_rate);
         REDIS_ASSERT(reserved, "bf_reserve failed");
 
-        auto cnt = bloomfilter.add(key, "foo");
+        auto cnt = _bloomfilter.add(key, "foo");
         REDIS_ASSERT(cnt == 1, "bf_add failed");
 
-        auto exists = bloomfilter.exists(key, "foo");
+        auto exists = _bloomfilter.exists(key, "foo");
         REDIS_ASSERT(exists, "bf_exists failed");
 
         {
             std::vector<std::string> input = { "foo", "bar", "zzz" };
             std::vector<long long> output;
-            bloomfilter.template madd(key, input.begin(), input.end(), output);
+            _bloomfilter.template madd(key, input.begin(), input.end(), output);
             REDIS_ASSERT(output.size() == 3 &&
                          output.at(0) == 0 &&
                          output.at(1) == 1 &&
@@ -81,7 +80,7 @@ namespace redis::module::test {
                          "bf_madd failed");
             output.clear();
 
-            bloomfilter.template mexists(key, input.begin(), input.end(), output);
+            _bloomfilter.template mexists(key, input.begin(), input.end(), output);
             REDIS_ASSERT(output.size() == 3 &&
                          output.at(0) == 1 &&
                          output.at(1) == 1 &&
@@ -91,7 +90,7 @@ namespace redis::module::test {
 
         {
             std::unordered_map<std::string, long long> output;
-            bloomfilter.info(key, output);
+            _bloomfilter.info(key, output);
             REDIS_ASSERT(!output.empty() &&
                          output.at("Expansion rate") ==  expansion_rate &&
                          output.at("Number of items inserted") == 3 &&
@@ -100,14 +99,14 @@ namespace redis::module::test {
                          output.at("Capacity") == capacity,
                          "bf_info failed");
         }
-        bloomfilter.del(key);
+        _redis.del(key);
 
-        insertVerify(bloomfilter, key,    0.1, capacity +  0, false, false, 4);
-        insertVerify(bloomfilter, key,   0.01, capacity + 10, false,  true, 5);
-        bloomfilter.del(key);
-        insertVerify(bloomfilter, key,  0.001, capacity + 20,  true, false, 6);
+        insertVerify(key,    0.1, capacity +  0, false, false, 4);
+        insertVerify(key,   0.01, capacity + 10, false,  true, 5);
+        _redis.del(key);
+        insertVerify(key,  0.001, capacity + 20,  true, false, 6);
         try {
-            insertVerify(bloomfilter, key, 0.0001, capacity + 30,  true,  true, 7);
+            insertVerify(key, 0.0001, capacity + 30,  true,  true, 7);
             REDIS_ASSERT(0, "bf_insert failed to throw exception.");
         }
         catch (sw::redis::Error& e) {
@@ -115,18 +114,18 @@ namespace redis::module::test {
         }
 
         std::unordered_map<std::string, long long> chunk_info;
-        bloomfilter.info(key, chunk_info);
+        _bloomfilter.info(key, chunk_info);
         std::vector<std::pair<long long, std::vector<unsigned char>>> chunks;
-        getChunks(bloomfilter, key, chunks);
+        getChunks(key, chunks);
 
-        bloomfilter.del(key);
+        _redis.del(key);
         for (const auto& chunk : chunks) {
-            auto loaded = bloomfilter.loadchunk(key, chunk);
+            auto loaded = _bloomfilter.loadchunk(key, chunk);
             REDIS_ASSERT(loaded, "bf_loadchunk failed");
         }
 
         std::vector<std::pair<long long, std::vector<unsigned char>>> verify_chunks;
-        getChunks(bloomfilter, key, verify_chunks);
+        getChunks(key, verify_chunks);
 
         // Revert to some more basic chunk checks, as a full match never occurs.
         REDIS_ASSERT(chunks.size() == verify_chunks.size(),
@@ -148,43 +147,41 @@ namespace redis::module::test {
         //REDIS_ASSERT(chunks == verify_chunks, "bf_loadchunk failed");
 
         std::unordered_map<std::string, long long> verify_chunk_info;
-        bloomfilter.info(key, chunk_info);
+        _bloomfilter.info(key, chunk_info);
         REDIS_ASSERT(chunk_info == verify_chunk_info,
                      "bf_loadchunk failed as non-matching bf_info was returned");
 
-        bloomfilter.del(key);
+        _redis.del(key);
     }
 
     template <typename RedisInstance>
     void
-    BloomFilterCommand<RedisInstance>::getChunks(redis::module::BloomFilter<RedisInstance>& bloomfilter,
-                                                 const sw::redis::StringView &key,
-                                                 std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) const {
+    BloomFilterCommand<RedisInstance>::getChunks(const sw::redis::StringView &key,
+                                                 std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) {
         long long iter = 0;
         std::pair<long long, std::vector<unsigned char>> result;
         for (;;) {
-            iter = bloomfilter.template scandump(key, iter, result);
+            iter = _bloomfilter.template scandump(key, iter, result);
             if (iter == 0) { break; }
             chunks.push_back(result);
         }
     }
 
     template <typename RedisInstance>
-    void BloomFilterCommand<RedisInstance>::insertVerify(redis::module::BloomFilter<RedisInstance>& bloomfilter,
-                                                         const sw::redis::StringView &key,
+    void BloomFilterCommand<RedisInstance>::insertVerify(const sw::redis::StringView &key,
                                                          double error_rate,
                                                          long long capacity,
                                                          bool nonscaling,
                                                          bool nocreate,
-                                                         int expansion) const {
+                                                         int expansion) {
         std::vector<std::string> input = { "foo", "bar", "zzz" };
         {
             std::vector<long long> output;
-            bloomfilter.template insert(key, error_rate, capacity, nonscaling, nocreate, input.begin(), input.end(), output, expansion);
+            _bloomfilter.template insert(key, error_rate, capacity, nonscaling, nocreate, input.begin(), input.end(), output, expansion);
             REDIS_ASSERT(output.size() == 3, "bf_insert failed");
         }
         std::unordered_map<std::string, sw::redis::OptionalLongLong> output;
-        bloomfilter.info(key, output);
+        _bloomfilter.info(key, output);
         REDIS_ASSERT(!output.empty() &&
                      (nonscaling || nocreate || (long long)(*output.at("Expansion rate")) ==  expansion) &&
                      (long long)(*output.at("Number of items inserted")) == input.size() &&

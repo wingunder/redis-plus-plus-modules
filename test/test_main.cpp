@@ -115,7 +115,8 @@ auto parse_options(int argc, char **argv)
 template <typename RedisInstance>
 void run_test(const sw::redis::ConnectionOptions &opts) {
 
-    redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(opts);
+    RedisInstance redis(opts);
+    redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
     bf_cmd.run();
 
     std::cout << "Passed bloomfilter tests" << std::endl;

@@ -17,7 +17,7 @@
 ## Introduction
 
 This library aims to supply a C++ interface to all major/popular Redis modules.
-It derives from [redis-plus-plus](https://github.com/sewenew/redis-plus-plus), which
+It uses [redis-plus-plus](https://github.com/sewenew/redis-plus-plus), which
 in turn uses [hiredis](https://github.com/redis/hiredis).
 
 ## Motivation
@@ -55,12 +55,20 @@ LD_LIBRARY_PATH=./lib ./test/test_redisbloom
 
 ## Quickstart
 
-First of all you'll need to hav access to a Redis database with the
+First of all you'll need to have access to a Redis database with the
 module(s) loaded, that you'd like to program against. The fastest way
 to get started with this is to simply head off to
 [redismod](https://github.com/RedisLabsModules/redismod) and follow
 their instructions to get a docker image installed and running, which
 will supply this.
+
+Another option is to use a docker image. The [RedisBllom Quickstart
+Guide](https://oss.redislabs.com/redisbloom/Quick_Start/)
+suggests the following:
+
+```console
+docker run -p 6379:6379 --name redis-redisbloom redislabs/rebloom:latest
+```
 
 Once your Redis database is set up and running, you can run the
 `MODULE LIST` command on it:
@@ -87,7 +95,7 @@ Not much more, but look at the `./test` directory for some hints.
 ## TODO
 
   - Add CuckooFilter, Count-Min-Sketch and Top-K
-  - Add `Quickstart` content
+  - Add a directory with some examples
   - Add doxygen output.
   - Install procedure and at least a Debian package
   - Add APIs for: RedisJSON, RediSearch, RedisTimeSeries, RedisGraph,

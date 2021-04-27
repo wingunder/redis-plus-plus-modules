@@ -23,22 +23,11 @@
 
 namespace redis::module {
 
-template <typename T>
-class BloomFilter : public T
+template <typename RedisInstance>
+class BloomFilter
 {
 public:
-    explicit BloomFilter(const sw::redis::ConnectionOptions &connection_opts,
-                   const sw::redis::ConnectionPoolOptions &pool_opts = {}) :
-        T(connection_opts, pool_opts) {}
-
-    explicit BloomFilter(const std::string &uri);
-
-    BloomFilter(const std::shared_ptr<sw::redis::Sentinel> &sentinel,
-          const std::string &master_name,
-          sw::redis::Role role,
-          const sw::redis::ConnectionOptions &connection_opts,
-          const sw::redis::ConnectionPoolOptions &pool_opts = {}) :
-        T(sentinel, master_name, role, connection_opts, pool_opts) {}
+    explicit BloomFilter(RedisInstance& redis) : _redis(redis) {}
 
     BloomFilter(const BloomFilter &) = delete;
     BloomFilter& operator=(const BloomFilter &) = delete;
@@ -54,12 +43,12 @@ public:
                  bool nonscaling,
                  long long expansion = default_expansion_rate) {
         if (nonscaling) {
-            auto reply = T::command("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
+            auto reply = _redis.command("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
             auto result = sw::redis::reply::parse<std::string>(*reply);
             return (result == "OK");
         }
         else {
-            auto reply = T::command("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
+            auto reply = _redis.command("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
             auto result = sw::redis::reply::parse<std::string>(*reply);
             return (result == "OK");
         };
@@ -67,7 +56,7 @@ public:
 
     long long add(const sw::redis::StringView &key,
                   const sw::redis::StringView &item) {
-        auto reply = T::command("BF.ADD",  key, item);
+        auto reply = _redis.command("BF.ADD",  key, item);
         return sw::redis::reply::parse<long long>(*reply);
     }
 
@@ -108,7 +97,7 @@ public:
         }
         args.push_back("ITEMS");
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        T::command(args.begin(), args.end(), std::back_inserter(result));
+        _redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     template <typename Input, typename Output>
@@ -121,14 +110,14 @@ public:
 
     long long exists(const sw::redis::StringView &key,
                      const sw::redis::StringView &item) {
-        auto reply = T::command("BF.EXISTS",  key, item);
+        auto reply = _redis.command("BF.EXISTS",  key, item);
         return sw::redis::reply::parse<long long>(*reply);
     }
 
     long long
     scandump(const sw::redis::StringView &key, long long iter, std::pair<long long, std::vector<unsigned char>>& result) {
         std::vector<sw::redis::StringView> args = { "BF.SCANDUMP", key, std::to_string(iter) };
-        auto reply = T::command(args.begin(), args.end());
+        auto reply = _redis.command(args.begin(), args.end());
         if (!sw::redis::reply::is_array(*reply)) {
             throw sw::redis::ProtoError("Expect ARRAY reply");
         }
@@ -161,14 +150,14 @@ public:
     bool
     loadchunk(const sw::redis::StringView &key, const std::pair<long long, std::vector<unsigned char>>& payload) {
         sw::redis::StringView data(reinterpret_cast<const char*>(payload.second.data()), payload.second.size());
-        auto reply = T::command("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
+        auto reply = _redis.command("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
         auto result = sw::redis::reply::parse<std::string>(*reply);
         return (result == "OK");
     }
 
     template <typename Output>
     void info(const sw::redis::StringView &key, Output &output) {
-        T::command("BF.INFO", key, std::inserter(output, output.end()));
+        _redis.command("BF.INFO", key, std::inserter(output, output.end()));
     }
 
 private:
@@ -181,11 +170,12 @@ private:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<std::string> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        T::command(args.begin(), args.end(), std::back_inserter(result));
+        _redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     static const long long default_expansion_rate = 2;
 
+    RedisInstance& _redis;
 };
 
 } // namespace
