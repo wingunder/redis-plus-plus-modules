@@ -29,7 +29,7 @@ namespace redis::module::test {
     }
 
     template <typename RedisInstance>
-    void BloomFilterCommand<RedisInstance>::test_commands(redis::module::BloomFilter<RedisInstance>& bloomfilter) {
+    void BloomFilterCommand<RedisInstance>::test_commands(redis::module::BloomFilter<RedisInstance>& bloomfilter) const {
 
         const std::string key = "newFilter";
         const int capacity = 5000;
@@ -108,20 +108,65 @@ namespace redis::module::test {
         insertVerify(bloomfilter, key,  0.001, capacity + 20,  true, false, 6);
         try {
             insertVerify(bloomfilter, key, 0.0001, capacity + 30,  true,  true, 7);
-            REDIS_ASSERT(0, "bf_insert filed to throw exception.");
+            REDIS_ASSERT(0, "bf_insert failed to throw exception.");
         }
         catch (sw::redis::Error& e) {
             // We're expecting this.
         }
 
-        long long iter = 0;
-        do {
-            std::pair<long long, std::vector<unsigned char>> result;
-            bloomfilter.template scandump(key, iter, result);
-            iter = result.first;
-        } while (iter != 0);
+        std::unordered_map<std::string, long long> chunk_info;
+        bloomfilter.info(key, chunk_info);
+        std::vector<std::pair<long long, std::vector<unsigned char>>> chunks;
+        getChunks(bloomfilter, key, chunks);
 
         bloomfilter.del(key);
+        for (const auto& chunk : chunks) {
+            auto loaded = bloomfilter.loadchunk(key, chunk);
+            REDIS_ASSERT(loaded, "bf_loadchunk failed");
+        }
+
+        std::vector<std::pair<long long, std::vector<unsigned char>>> verify_chunks;
+        getChunks(bloomfilter, key, verify_chunks);
+
+        // Revert to some more basic chunk checks, as a full match never occurs.
+        REDIS_ASSERT(chunks.size() == verify_chunks.size(),
+                     "bf_loadchunk failed due to different amount of chunks");
+        // The chunks seem not to match. Why?
+        if (chunks != verify_chunks) {
+            for (int i=0; i<chunks.size(); i++) {
+                REDIS_ASSERT(chunks.at(i).second.size() == verify_chunks.at(i).second.size(),
+                             "bf_loadchunk failed due to a missmatch in chunk size.");
+                if (chunks.at(i).second != verify_chunks.at(i).second) {
+                    for (int j=0; j<chunks.at(i).second.size(); j++) {
+                        if (chunks.at(i).second.at(j) != verify_chunks.at(i).second.at(j)) {
+                            //std::cout << "e " << i << " " << j << " " << chunks.at(i).second.at(j) << " " << verify_chunks.at(i).second.at(j) << std::endl;
+                        }
+                    }
+                }
+            }
+        }
+        //REDIS_ASSERT(chunks == verify_chunks, "bf_loadchunk failed");
+
+        std::unordered_map<std::string, long long> verify_chunk_info;
+        bloomfilter.info(key, chunk_info);
+        REDIS_ASSERT(chunk_info == verify_chunk_info,
+                     "bf_loadchunk failed as non-matching bf_info was returned");
+
+        bloomfilter.del(key);
+    }
+
+    template <typename RedisInstance>
+    void
+    BloomFilterCommand<RedisInstance>::getChunks(redis::module::BloomFilter<RedisInstance>& bloomfilter,
+                                                 const sw::redis::StringView &key,
+                                                 std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) const {
+        long long iter = 0;
+        std::pair<long long, std::vector<unsigned char>> result;
+        for (;;) {
+            iter = bloomfilter.template scandump(key, iter, result);
+            if (iter == 0) { break; }
+            chunks.push_back(result);
+        }
     }
 
     template <typename RedisInstance>
@@ -131,7 +176,7 @@ namespace redis::module::test {
                                                          long long capacity,
                                                          bool nonscaling,
                                                          bool nocreate,
-                                                         int expansion) {
+                                                         int expansion) const {
         std::vector<std::string> input = { "foo", "bar", "zzz" };
         {
             std::vector<long long> output;

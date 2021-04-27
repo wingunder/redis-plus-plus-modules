@@ -125,7 +125,7 @@ public:
         return sw::redis::reply::parse<long long>(*reply);
     }
 
-    void
+    long long
     scandump(const sw::redis::StringView &key, long long iter, std::pair<long long, std::vector<unsigned char>>& result) {
         std::vector<sw::redis::StringView> args = { "BF.SCANDUMP", key, std::to_string(iter) };
         auto reply = T::command(args.begin(), args.end());
@@ -141,19 +141,29 @@ public:
             throw sw::redis::ProtoError("Null PAIR reply");
         }
 
+        result.second.clear();
         auto *first = reply->element[0];
         auto *second = reply->element[1];
         if (first == nullptr) {
             throw sw::redis::ProtoError("Null iterator reply");
+            result.first = 0;
         }
         else {
-            result.first = first->integer;
+            result.first = sw::redis::reply::parse<long long>(*first);
         }
-        result.second.clear();
         if (second != nullptr) {
             auto str = sw::redis::reply::parse<std::string>(*second);
             std::copy(str.begin(), str.end(), std::back_inserter(result.second));
         }
+        return result.first;
+    }
+
+    bool
+    loadchunk(const sw::redis::StringView &key, const std::pair<long long, std::vector<unsigned char>>& payload) {
+        sw::redis::StringView data(reinterpret_cast<const char*>(payload.second.data()), payload.second.size());
+        auto reply = T::command("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
+        auto result = sw::redis::reply::parse<std::string>(*reply);
+        return (result == "OK");
     }
 
     template <typename Output>

@@ -31,7 +31,11 @@ namespace redis::module::test {
         void run();
 
     private:
-        void test_commands(redis::module::BloomFilter<RedisInstance> &bloom);
+        void test_commands(redis::module::BloomFilter<RedisInstance> &bloom) const;
+
+        void getChunks(redis::module::BloomFilter<RedisInstance>& bloomfilter,
+                       const sw::redis::StringView &key,
+                       std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) const;
 
         void insertVerify(redis::module::BloomFilter<RedisInstance>& bloomfilter,
                           const sw::redis::StringView &key,
@@ -39,7 +43,7 @@ namespace redis::module::test {
                           long long capacity,
                           bool nonscaling,
                           bool nocreate,
-                          int expansion);
+                          int expansion) const;
         const sw::redis::ConnectionOptions _opts;
     };
 
