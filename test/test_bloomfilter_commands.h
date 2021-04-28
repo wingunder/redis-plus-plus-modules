@@ -32,7 +32,7 @@ namespace redis::module::test {
         void run(const std::string &key);
 
     protected:
-        BloomBase<RedisInstance>& redisInstance() { return _bloom; }
+        BloomFilter<RedisInstance>& redisInstance() { return _bloom; }
 
     private:
         void test_commands(const std::string &key);

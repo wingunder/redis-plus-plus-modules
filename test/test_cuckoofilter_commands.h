@@ -32,10 +32,18 @@ namespace redis::module::test {
         void run(const std::string &key);
 
     protected:
-        BloomBase<RedisInstance>& redisInstance() { return _bloom; }
+        CuckooFilter<RedisInstance>& redisInstance() { return _bloom; }
 
     private:
         void test_commands(const std::string &key);
+
+        void insertVerify(const sw::redis::StringView &key,
+                          long long capacity,
+                          bool nocreate);
+
+        void insertnxVerify(const sw::redis::StringView &key,
+                            long long capacity,
+                            bool nocreate);
 
         redis::module::CuckooFilter<RedisInstance> _bloom;
     };

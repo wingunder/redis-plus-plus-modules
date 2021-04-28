@@ -25,57 +25,72 @@ template <typename RedisInstance>
 class CuckooFilter : public BloomBase<RedisInstance>
 {
 public:
-    explicit CuckooFilter(RedisInstance& redis) : BloomBase<RedisInstance>(redis, "CF") {}
+    explicit CuckooFilter(RedisInstance &redis) : BloomBase<RedisInstance>(redis, "CF") {}
 
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/Cuckoo_Commands/
 
     void reserve(const sw::redis::StringView &key,
-                 double error_rate,
                  long long capacity,
-                 bool nonscaling,
+                 long long bucketsize,
+                 long long max_iterations = default_max_iterations,
                  long long expansion = default_expansion_rate) {
-        if (nonscaling) {
-            BloomBase<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
-        }
-        else {
-            BloomBase<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
-        };
+        BloomBase<RedisInstance>::_redis.template command<void>
+            ("CF.RESERVE",  key, capacity,
+             "BUCKETSIZE", bucketsize,
+             "MAXITERATIONS",  max_iterations,
+             "EXPANSION", expansion);
     }
 
-    template <typename Input, typename Output>
-    void madd(const std::string& key,
-              Input first,
-              Input last,
-              Output &result) {
-        m_command("BF.MADD", key, first, last, result);
+    long long addnx(const sw::redis::StringView &key,
+                    const sw::redis::StringView &item) {
+        return BloomBase<RedisInstance>::_redis.template command<long long>("CF.ADDNX",  key, item);
+    }
+
+    long long del(const sw::redis::StringView &key,
+                  const sw::redis::StringView &item) {
+        return BloomBase<RedisInstance>::_redis.template command<long long>("CF.DEL",  key, item);
     }
 
     template <typename Input, typename Output>
     void insert(const sw::redis::StringView &key,
-                double error_rate,
-                long long capacity,
-                bool nonscaling,
-                bool nocreate,
-                Input first,
-                Input last,
-                Output &result,
-                long long expansion = default_expansion_rate) {
-        std::string cmd = "BF.INSERT";
+                  long long capacity,
+                  bool nocreate,
+                  Input first,
+                  Input last,
+                  Output &result) {
+        cf_insert("CF.INSERT", key, capacity, nocreate, first, last, result);
+    }
+
+    template <typename Input, typename Output>
+    void insertnx(const sw::redis::StringView &key,
+                  long long capacity,
+                  bool nocreate,
+                  Input first,
+                  Input last,
+                  Output &result) {
+        cf_insert("CF.INSERTNX", key, capacity, nocreate, first, last, result);
+    }
+
+    template <typename Input, typename Output>
+    long long count(const sw::redis::StringView &key,
+                    const sw::redis::StringView &item) {
+        return BloomBase<RedisInstance>::_redis.template command<long long>("CF.COUNT",  key, item);
+    }
+
+private:
+    template <typename Input, typename Output>
+    void cf_insert(const std::string& cmd,
+                   const sw::redis::StringView &key,
+                   long long capacity,
+                   bool nocreate,
+                   Input first,
+                   Input last,
+                   Output &result) {
         sw::redis::range_check(cmd.c_str(), first, last);
 
-        std::vector<sw::redis::StringView> args = { cmd, key,
-            "CAPACITY", std::to_string(capacity),
-            "ERROR", std::to_string(error_rate),
-            "EXPANSION", std::to_string(expansion)
-        };
-        if (nonscaling && nocreate) {
-            throw sw::redis::Error("In BF.INSERT, nonscaling and nocreate are mutually exclusive. Setting both is not allowed.");
-        }
-        else if (nonscaling) {
-            args.push_back("NONSCALING");
-        }
-        else if (nocreate) {
+        std::vector<sw::redis::StringView> args = { cmd, key, "CAPACITY", std::to_string(capacity) };
+        if (nocreate) {
             args.push_back("NOCREATE");
         }
         args.push_back("ITEMS");
@@ -83,28 +98,8 @@ public:
         BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
-    template <typename Input, typename Output>
-    void mexists(const std::string& key,
-                 Input first,
-                 Input last,
-                 Output &result) {
-        m_command("BF.MEXISTS", key, first, last, result);
-    }
-
-private:
-    template <typename Input, typename Output>
-    void m_command(const std::string& cmd,
-                   const std::string& key,
-                   Input first,
-                   Input last,
-                   Output &result) {
-        sw::redis::range_check(cmd.c_str(), first, last);
-        std::vector<std::string> args = { cmd, key };
-        std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
-    }
-
-    static const long long default_expansion_rate = 2;
+    static const long long default_expansion_rate = 1;
+    static const long long default_max_iterations = 20;
 };
 
 } // namespace

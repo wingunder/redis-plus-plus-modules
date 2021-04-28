@@ -20,6 +20,11 @@ This library aims to supply a C++ interface to all major/popular Redis modules.
 It uses [redis-plus-plus](https://github.com/sewenew/redis-plus-plus), which
 in turn uses [hiredis](https://github.com/redis/hiredis).
 
+Currently, interfaces for the folowing modules are a 100% implemented:
+
+  - [BloomFilter](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
+  - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
+
 ## Motivation
 
 After using [redis-plus-plus](https://github.com/sewenew/redis-plus-plus)
@@ -48,9 +53,9 @@ cd
 make -j8
 ```
 
-Tests for RedisBloom can be done by running:
+Tests can be performed by running:
 ```shell
-LD_LIBRARY_PATH=./lib ./test/test_redisbloom
+make test
 ```
 
 ## Quickstart
@@ -79,11 +84,12 @@ $ redis-cli MODULE LIST
    3) "ver"
    4) (integer) 20205
 ```
-In the above example, only the BloomFilter module is loaded.
+In the above example, the BloomFilter module is loaded, which supplies
+BloomFilter (BF), CuckooFilter (CF), Count-Min-Sketch (CMS) and Top-K
+(TOPK).
 
 The `./test` directory contains test cases for all implemented API
-calls to the implemented modules. In order to run the tests, simply
-run:
+calls. In order to run the tests, simply run:
 
 ```shell
 make test
@@ -91,7 +97,7 @@ make test
 
 ## APIs
 
-### RedisBloom
+### RedisBloom API Documentation
 
   - [BloomFilter](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
   - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
@@ -100,9 +106,9 @@ make test
 
 ## TODO
 
-  - Add CuckooFilter, Count-Min-Sketch and Top-K
+  - Add Count-Min-Sketch and Top-K
   - Add a directory with some examples
-  - Add doxygen output.
+  - Add doxygen output
   - Install procedure and at least a Debian package
   - Add APIs for: RedisJSON, RediSearch, RedisTimeSeries, RedisGraph,
     RedisAI and RedisGears
@@ -124,14 +130,16 @@ to open issues and reviews.
 
 ## Authors
 
-The initial version of *redis-plus-plus-modules* was written by [wingunder](https://github.com/wingunder).
+The initial version of *redis-plus-plus-modules* was written by
+[wingunder](https://github.com/wingunder).
 Some ideas and code originate from
 [sewenew](https://github.com/sewenew) and his amazing
 [redis-plus-plus](https://github.com/sewenew/redis-plus-plus) library.
 
 ## Copyright
 
-This software is copyrighted under [Apache Licence V2.0](https://www.apache.org/licenses/LICENSE-2.0).
+This software is copyrighted under [Apache Licence
+V2.0](https://www.apache.org/licenses/LICENSE-2.0).
 
 
 ## History

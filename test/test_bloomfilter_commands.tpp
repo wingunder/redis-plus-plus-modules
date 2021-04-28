@@ -24,6 +24,7 @@ namespace redis::module::test {
     template <typename RedisInstance>
     void BloomFilterCommand<RedisInstance>::run(const std::string &key) {
         test_commands(key);
+
         BloomBaseCommand<RedisInstance>::test_chunks(key);
         BloomBaseCommand<RedisInstance>::_redis.del(key);
     }
@@ -109,6 +110,8 @@ namespace redis::module::test {
         catch (sw::redis::Error& e) {
             // We're expecting this.
         }
+
+        // Don't delete the last key, as we need it for the next test.
     }
 
     template <typename RedisInstance>

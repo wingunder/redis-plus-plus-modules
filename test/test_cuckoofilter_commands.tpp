@@ -25,17 +25,90 @@ namespace redis::module::test {
     template <typename RedisInstance>
     void CuckooFilterCommand<RedisInstance>::run(const std::string &key) {
         test_commands(key);
+
+        auto cnt = _bloom.add(key, "foo");
+        REDIS_ASSERT(cnt == 1, "cf_add failed");
         BloomBaseCommand<RedisInstance>::test_chunks(key);
     }
 
     template <typename RedisInstance>
     void CuckooFilterCommand<RedisInstance>::test_commands(const std::string &key) {
-        auto cnt = redisInstance().add(key, "foo");
-        REDIS_ASSERT(cnt == 1, "cf_add failed");
+        {
+            auto cnt = redisInstance().add(key, "foo");
+            REDIS_ASSERT(cnt == 1, "cf_add failed");
 
-        auto exists = redisInstance().exists(key, "foo");
-        REDIS_ASSERT(exists, "cf_exists failed");
+            auto exists = redisInstance().exists(key, "foo");
+            REDIS_ASSERT(exists, "cf_exists failed");
 
+            auto deleted = redisInstance().del(key, "foo");
+            REDIS_ASSERT(deleted, "cf_del failed");
+
+            exists = redisInstance().exists(key, "foo");
+            REDIS_ASSERT(!exists, "cf_del failed as it still exists");
+        }
+
+        {
+            auto cnt = _bloom.addnx(key, "foo");
+            REDIS_ASSERT(cnt == 1, "cf_addnx failed");
+
+            auto exists = _bloom.exists(key, "foo");
+            REDIS_ASSERT(exists, "cf_exists failed");
+
+            auto deleted = _bloom.del(key, "foo");
+            REDIS_ASSERT(deleted, "cf_del failed");
+        }
+        {
+            insertVerify(key, 500, false);
+            insertVerify(key, 500, true);
+        }
+        {
+            insertnxVerify(key, 500, false);
+            insertnxVerify(key, 500, true);
+        }
+    }
+
+    template <typename RedisInstance>
+    void CuckooFilterCommand<RedisInstance>::insertVerify(const sw::redis::StringView &key,
+                                                          long long capacity,
+                                                          bool nocreate) {
+        if (nocreate) {
+            _bloom.reserve(key, capacity, 3);
+        }
+        std::vector<std::string> input = { "foo", "bar", "zzz" };
+        {
+            std::vector<long long> output;
+            _bloom.template insert(key, capacity, nocreate, input.begin(), input.end(), output);
+            REDIS_ASSERT(output.size() == 3, "cf_insert failed");
+        }
+        std::unordered_map<std::string, sw::redis::OptionalLongLong> output;
+        _bloom.info(key, output);
+        REDIS_ASSERT(!output.empty() &&
+                     (long long)(*output.at("Number of items inserted")) == input.size() &&
+                     (long long)(*output.at("Number of filters")) == 1,
+                     "cf_insert's verification failed");
+        BloomBaseCommand<RedisInstance>::_redis.del(key);
+    }
+
+    template <typename RedisInstance>
+    void CuckooFilterCommand<RedisInstance>::insertnxVerify(const sw::redis::StringView &key,
+                                                            long long capacity,
+                                                            bool nocreate) {
+        if (nocreate) {
+            _bloom.reserve(key, capacity, 3);
+        }
+        std::vector<std::string> input = { "foo", "bar", "zzz" };
+        {
+            std::vector<long long> output;
+            _bloom.template insertnx(key, capacity, nocreate, input.begin(), input.end(), output);
+            REDIS_ASSERT(output.size() == 3, "cf_insert failed");
+        }
+        std::unordered_map<std::string, sw::redis::OptionalLongLong> output;
+        _bloom.info(key, output);
+        REDIS_ASSERT(!output.empty() &&
+                     (long long)(*output.at("Number of items inserted")) == input.size() &&
+                     (long long)(*output.at("Number of filters")) == 1,
+                     "cf_insert's verification failed");
+        BloomBaseCommand<RedisInstance>::_redis.del(key);
     }
 
 } // namespace
