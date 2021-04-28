@@ -21,6 +21,9 @@ lib/libhiredis.a lib/libhiredis.so:
 clean-local:
 	rm -rf build include lib share
 
+test:
+	LD_LIBRARY_PATH=./lib ./test/test_redisbloom
+
 .PRECIOUS: build
 
-.PHONY: build
+.PHONY: build test

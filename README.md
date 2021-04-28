@@ -81,7 +81,13 @@ $ redis-cli MODULE LIST
 ```
 In the above example, only the BloomFilter module is loaded.
 
-Not much more, but look at the `./test` directory for some hints.
+The `./test` directory contains test cases for all implemented API
+calls to the implemented modules. In order to run the tests, simply
+run:
+
+```shell
+make test
+```
 
 ## APIs
 
