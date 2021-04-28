@@ -17,22 +17,15 @@
 #ifndef REDIS_PLUS_PLUS_BLOOM_FILTER_H
 #define REDIS_PLUS_PLUS_BLOOM_FILTER_H
 
-#include <sw/redis++/redis++.h>
-#include <algorithm>
-#include <iterator>
+#include "BloomBase.h"
 
 namespace redis::module {
 
 template <typename RedisInstance>
-class BloomFilter
+class BloomFilter : public BloomBase<RedisInstance>
 {
 public:
-    explicit BloomFilter(RedisInstance& redis) : _redis(redis) {}
-
-    BloomFilter(const BloomFilter &) = delete;
-    BloomFilter& operator=(const BloomFilter &) = delete;
-    BloomFilter(BloomFilter &&) = default;
-    BloomFilter& operator=(BloomFilter &&) = default;
+    explicit BloomFilter(RedisInstance& redis) : BloomBase<RedisInstance>(redis, "BF") {}
 
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/Bloom_Commands/
@@ -43,16 +36,11 @@ public:
                  bool nonscaling,
                  long long expansion = default_expansion_rate) {
         if (nonscaling) {
-            _redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
+            BloomBase<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
         }
         else {
-            _redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
+            BloomBase<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
         };
-    }
-
-    long long add(const sw::redis::StringView &key,
-                  const sw::redis::StringView &item) {
-        return _redis.template command<long long>("BF.ADD",  key, item);
     }
 
     template <typename Input, typename Output>
@@ -92,7 +80,7 @@ public:
         }
         args.push_back("ITEMS");
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        _redis.command(args.begin(), args.end(), std::back_inserter(result));
+        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     template <typename Input, typename Output>
@@ -103,15 +91,10 @@ public:
         m_command("BF.MEXISTS", key, first, last, result);
     }
 
-    long long exists(const sw::redis::StringView &key,
-                     const sw::redis::StringView &item) {
-        return _redis.template command<long long>("BF.EXISTS",  key, item);
-    }
-
     long long
     scandump(const sw::redis::StringView &key, long long iter, std::pair<long long, std::vector<unsigned char>>& result) {
         std::vector<sw::redis::StringView> args = { "BF.SCANDUMP", key, std::to_string(iter) };
-        auto reply = _redis.command(args.begin(), args.end());
+        auto reply = BloomBase<RedisInstance>::_redis.command(args.begin(), args.end());
         if (!sw::redis::reply::is_array(*reply)) {
             throw sw::redis::ProtoError("Expect ARRAY reply");
         }
@@ -144,12 +127,7 @@ public:
     void
     loadchunk(const sw::redis::StringView &key, const std::pair<long long, std::vector<unsigned char>>& payload) {
         sw::redis::StringView data(reinterpret_cast<const char*>(payload.second.data()), payload.second.size());
-        _redis.template command<void>("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
-    }
-
-    template <typename Output>
-    void info(const sw::redis::StringView &key, Output &output) {
-        _redis.command("BF.INFO", key, std::inserter(output, output.end()));
+        BloomBase<RedisInstance>::_redis.template command<void>("BF.LOADCHUNK",  key, std::to_string(payload.first), data);
     }
 
 private:
@@ -162,16 +140,12 @@ private:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<std::string> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        _redis.command(args.begin(), args.end(), std::back_inserter(result));
+        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     static const long long default_expansion_rate = 2;
-
-    RedisInstance& _redis;
 };
 
 } // namespace
-
-//#include "bloomfilter.tpp"
 
 #endif
