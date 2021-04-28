@@ -21,6 +21,7 @@
 #include <iostream>
 #include <sw/redis++/redis++.h>
 #include "test_bloomfilter_commands.h"
+#include "test_cuckoofilter_commands.h"
 
 void print_help();
 
@@ -116,8 +117,15 @@ template <typename RedisInstance>
 void run_test(const sw::redis::ConnectionOptions &opts) {
 
     RedisInstance redis(opts);
-    redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
-    bf_cmd.run();
+    const std::string key = "newFilter";
+    {
+        redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
+        bf_cmd.run(key);
+    }
+    {
+        redis::module::test::CuckooFilterCommand<RedisInstance> cf_cmd(redis);
+        cf_cmd.run(key);
+    }
 
     std::cout << "Passed bloomfilter tests" << std::endl;
 }

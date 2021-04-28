@@ -14,19 +14,19 @@
  * limitations under the License.
  **/
 
-#ifndef REDIS_MODULE_TEST_BLOOMFILTER_COMMAND_H
-#define REDIS_MODULE_TEST_BLOOMFILTER_COMMAND_H
+#ifndef REDIS_MODULE_TEST_CUCKOOFILTER_COMMAND_H
+#define REDIS_MODULE_TEST_CUCKOOFILTER_COMMAND_H
 
-#include <RedisBloom/BloomFilter.h>
+#include <RedisBloom/CuckooFilter.h>
 #include "test_bloombase_commands.h"
 
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    class BloomFilterCommand : public BloomBaseCommand<RedisInstance>
+    class CuckooFilterCommand : public BloomBaseCommand<RedisInstance>
     {
     public:
-        BloomFilterCommand(RedisInstance &redis)
+        CuckooFilterCommand(RedisInstance &redis)
             : BloomBaseCommand<RedisInstance>(redis), _bloom(redis) {}
 
         void run(const std::string &key);
@@ -37,18 +37,11 @@ namespace redis::module::test {
     private:
         void test_commands(const std::string &key);
 
-        void insertVerify(const sw::redis::StringView &key,
-                          double error_rate,
-                          long long capacity,
-                          bool nonscaling,
-                          bool nocreate,
-                          int expansion);
-
-        redis::module::BloomFilter<RedisInstance> _bloom;
+        redis::module::CuckooFilter<RedisInstance> _bloom;
     };
 
 }
 
-#include "test_bloomfilter_commands.tpp"
+#include "test_cuckoofilter_commands.tpp"
 
 #endif

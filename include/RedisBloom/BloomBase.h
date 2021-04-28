@@ -83,7 +83,7 @@ public:
         else {
             result.first = sw::redis::reply::parse<long long>(*first);
         }
-        if (second != nullptr) {
+        if (second != nullptr && sw::redis::reply::is_string(*second)) {
             auto str = sw::redis::reply::parse<std::string>(*second);
             std::copy(str.begin(), str.end(), std::back_inserter(result.second));
         }
