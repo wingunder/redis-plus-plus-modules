@@ -65,6 +65,21 @@ public:
     }
 
     template <typename Input, typename Output>
+    void incrby(const sw::redis::StringView &key,
+                Input first,
+                Input last,
+                Output output) {
+        static const std::string cmd = "CMS.INCRBY";
+        sw::redis::range_check(cmd.c_str(), first, last);
+        std::vector<std::string> args = { cmd.data(), key.data() };
+        std::for_each(first, last, [&args](auto &p){
+            args.push_back(p.first);
+            args.push_back(std::to_string(p.second));
+        });
+        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+    }
+
+    template <typename Input, typename Output>
     void query(const sw::redis::StringView &key, Input first, Input last, Output output) {
         static const std::string cmd = "CMS.QUERY";
         sw::redis::range_check(cmd.c_str(), first, last);

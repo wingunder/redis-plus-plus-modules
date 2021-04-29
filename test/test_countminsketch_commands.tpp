@@ -57,11 +57,12 @@ namespace redis::module::test {
         std::for_each(items.begin(), items.end(), [&input](auto& k){ input.push_back(k.first); });
 
         for (int j=0; j<2; j++) {
-            _bloom.template incrby(key, items.begin(), items.end());
+            std::vector<long long> incresult;
+            _bloom.template incrby(key, items.begin(), items.end(), std::back_inserter(incresult));
 
             std::vector<long long> result;
             _bloom.template query(key, input.begin(), input.end(), std::back_inserter(result));
-            REDIS_ASSERT(items.size() == result.size(), "cms_query returned wring size");
+            REDIS_ASSERT(items.size() == result.size(), "cms_query returned wrong size");
             for (int i=0; i<input.size(); i++) {
                 REDIS_ASSERT( (j+1) *items.at(input.at(i)) == result.at(i), "cms_query failed");
             }

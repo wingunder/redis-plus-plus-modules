@@ -24,6 +24,7 @@
 #include "test_bloomfilter_commands.h"
 #include "test_cuckoofilter_commands.h"
 #include "test_countminsketch_commands.h"
+#include "test_topk_commands.h"
 
 auto parse_options(int argc, char **argv)
     -> std::tuple<sw::redis::Optional<sw::redis::ConnectionOptions>, bool>;
@@ -132,6 +133,11 @@ void run_test(const sw::redis::ConnectionOptions &opts) {
         redis::module::test::CountMinSketchCommand<RedisInstance> cms_cmd(redis);
         cms_cmd.run(key);
         std::cout << "Passed CountMinSketch tests" << std::endl;
+    }
+    {
+        redis::module::test::TopKCommand<RedisInstance> topk_cmd(redis);
+        topk_cmd.run(key);
+        std::cout << "Passed TopK tests" << std::endl;
     }
 
     std::cout << "Passed RedisBloom tests" << std::endl;

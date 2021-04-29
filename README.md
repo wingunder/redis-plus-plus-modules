@@ -20,11 +20,12 @@ This library aims to supply a C++ interface to all major/popular Redis modules.
 It uses [redis-plus-plus](https://github.com/sewenew/redis-plus-plus), which
 in turn uses [hiredis](https://github.com/redis/hiredis).
 
-Currently, interfaces for the folowing modules are a 100% implemented:
+Currently, interfaces for the folowing modules are fully implemented:
 
   - [BloomFilter](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
   - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Count-Min-Sketch](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
+  - [Top-K](https://oss.redislabs.com/redisbloom/TopK_Commands/)
 
 ## Motivation
 
@@ -107,7 +108,6 @@ make test
 
 ## TODO
 
-  - Add Top-K
   - Add a directory with some examples
   - Add doxygen output
   - Install procedure and at least a Debian package
