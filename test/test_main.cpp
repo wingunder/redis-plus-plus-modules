@@ -1,5 +1,6 @@
 /**************************************************************************
    Copyright (c) 2017 sewenew
+   Modifications Copyright (c) 2021 Pieter du Preez <pdupreez@gmail.com>
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -22,8 +23,7 @@
 #include <sw/redis++/redis++.h>
 #include "test_bloomfilter_commands.h"
 #include "test_cuckoofilter_commands.h"
-
-void print_help();
+#include "test_countminsketch_commands.h"
 
 auto parse_options(int argc, char **argv)
     -> std::tuple<sw::redis::Optional<sw::redis::ConnectionOptions>, bool>;
@@ -121,11 +121,18 @@ void run_test(const sw::redis::ConnectionOptions &opts) {
     {
         redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
         bf_cmd.run(key);
+        std::cout << "Passed BloomFilter tests" << std::endl;
     }
     {
         redis::module::test::CuckooFilterCommand<RedisInstance> cf_cmd(redis);
         cf_cmd.run(key);
+        std::cout << "Passed CuckooFilter tests" << std::endl;
+    }
+    {
+        redis::module::test::CountMinSketchCommand<RedisInstance> cms_cmd(redis);
+        cms_cmd.run(key);
+        std::cout << "Passed CountMinSketch tests" << std::endl;
     }
 
-    std::cout << "Passed bloomfilter tests" << std::endl;
+    std::cout << "Passed RedisBloom tests" << std::endl;
 }

@@ -94,12 +94,12 @@ public:
 private:
     template <typename Input, typename Output>
     void m_command(const std::string& cmd,
-                   const std::string& key,
+                   const sw::redis::StringView& key,
                    Input first,
                    Input last,
                    Output &result) {
         sw::redis::range_check(cmd.c_str(), first, last);
-        std::vector<std::string> args = { cmd, key };
+        std::vector<sw::redis::StringView> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
         BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }

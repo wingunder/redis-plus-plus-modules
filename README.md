@@ -24,6 +24,7 @@ Currently, interfaces for the folowing modules are a 100% implemented:
 
   - [BloomFilter](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
   - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
+  - [Count-Min-Sketch](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
 
 ## Motivation
 
@@ -106,7 +107,7 @@ make test
 
 ## TODO
 
-  - Add Count-Min-Sketch and Top-K
+  - Add Top-K
   - Add a directory with some examples
   - Add doxygen output
   - Install procedure and at least a Debian package
