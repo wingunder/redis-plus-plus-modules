@@ -18,16 +18,16 @@
 #define REDIS_MODULE_TEST_TOP_K_COMMAND_H
 
 #include <RedisBloom/TopK.h>
-#include "test_bloombase_commands.h"
+#include "test_redisbloom_commands.h"
 
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    class TopKCommand : public BloomBaseCommand<RedisInstance>
+    class TopKCommand : public RedisBloomCommand<RedisInstance>
     {
     public:
         TopKCommand(RedisInstance &redis)
-            : BloomBaseCommand<RedisInstance>(redis), _bloom(redis) {}
+            : RedisBloomCommand<RedisInstance>(redis), _bloom(redis) {}
 
         void run(const std::string &key);
 

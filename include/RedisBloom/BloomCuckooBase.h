@@ -17,12 +17,12 @@
 #ifndef REDIS_PLUS_PLUS_BLOOM_CUCKOO_BASE_H
 #define REDIS_PLUS_PLUS_BLOOM_CUCKOO_BASE_H
 
-#include "BloomBase.h"
+#include "RedisBloom.h"
 
 namespace redis::module {
 
 template <typename RedisInstance>
-class BloomCuckooBase : public BloomBase<RedisInstance>
+class BloomCuckooBase : public RedisBloom<RedisInstance>
 {
 public:
     // The following is an implementation of common calls in:
@@ -31,19 +31,19 @@ public:
 
     long long add(const sw::redis::StringView &key,
                   const sw::redis::StringView &item) {
-        return BloomBase<RedisInstance>::_redis.template command<long long>(_add_cmd,  key, item);
+        return RedisBloom<RedisInstance>::_redis.template command<long long>(_add_cmd,  key, item);
     }
 
     long long exists(const sw::redis::StringView &key,
                      const sw::redis::StringView &item) {
-        return BloomBase<RedisInstance>::_redis.template command<long long>(_exists_cmd,  key, item);
+        return RedisBloom<RedisInstance>::_redis.template command<long long>(_exists_cmd,  key, item);
     }
 
     void
     loadchunk(const sw::redis::StringView &key,
               const std::pair<long long, std::vector<unsigned char>>& payload) {
         sw::redis::StringView data(reinterpret_cast<const char*>(payload.second.data()), payload.second.size());
-        BloomBase<RedisInstance>::_redis.template command<void>(_loadchunk_cmd,  key, std::to_string(payload.first), data);
+        RedisBloom<RedisInstance>::_redis.template command<void>(_loadchunk_cmd,  key, std::to_string(payload.first), data);
     }
 
     long long
@@ -51,7 +51,7 @@ public:
              long long iter,
              std::pair<long long, std::vector<unsigned char>>& result) {
         std::vector<sw::redis::StringView> args = { _scandump_cmd, key, std::to_string(iter) };
-        auto reply = BloomBase<RedisInstance>::_redis.command(args.begin(), args.end());
+        auto reply = RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end());
         if (!sw::redis::reply::is_array(*reply)) {
             throw sw::redis::ProtoError("Expect ARRAY reply");
         }
@@ -83,7 +83,7 @@ public:
 
 protected:
     explicit BloomCuckooBase(RedisInstance& redis, const std::string& command_prefix)
-        : BloomBase<RedisInstance>(redis, command_prefix),
+        : RedisBloom<RedisInstance>(redis, command_prefix),
           _add_cmd(command_prefix + ".ADD"),
           _exists_cmd(command_prefix + ".EXISTS"),
           _loadchunk_cmd(command_prefix + ".LOADCHUNK"),

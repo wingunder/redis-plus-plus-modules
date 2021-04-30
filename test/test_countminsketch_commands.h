@@ -18,16 +18,16 @@
 #define REDIS_MODULE_TEST_COUNT_MIN_SCETCH_COMMAND_H
 
 #include <RedisBloom/CountMinSketch.h>
-#include "test_bloombase_commands.h"
+#include "test_redisbloom_commands.h"
 
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    class CountMinSketchCommand : public BloomBaseCommand<RedisInstance>
+    class CountMinSketchCommand : public RedisBloomCommand<RedisInstance>
     {
     public:
         CountMinSketchCommand(RedisInstance &redis)
-            : BloomBaseCommand<RedisInstance>(redis), _bloom(redis) {}
+            : RedisBloomCommand<RedisInstance>(redis), _bloom(redis) {}
 
         void run(const std::string &key);
 

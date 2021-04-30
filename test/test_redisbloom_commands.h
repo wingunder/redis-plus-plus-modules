@@ -14,21 +14,26 @@
  * limitations under the License.
  **/
 
-#ifndef REDIS_MODULE_TEST_BLOOMBASE_COMMAND_H
-#define REDIS_MODULE_TEST_BLOOMBASE_COMMAND_H
+#ifndef REDIS_MODULE_TEST_REDIS_BLOOM_COMMAND_H
+#define REDIS_MODULE_TEST_REDIS_BLOOM_COMMAND_H
 
-#include <RedisBloom/BloomBase.h>
+#include <RedisBloom/RedisBloom.h>
 
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    class BloomBaseCommand
+    class RedisBloomCommand
     {
+    public:
+        sw::redis::OptionalLongLong version() {
+            return redisInstance().version();
+        }
     protected:
-        BloomBaseCommand(RedisInstance &redis)
+        RedisBloomCommand(RedisInstance &redis)
             : _redis(redis) {}
 
         virtual void run(const std::string &key) = 0;
+        virtual RedisBloom<RedisInstance>& redisInstance() = 0;
 
         void test_chunks(BloomCuckooBase<RedisInstance>& bloom, const std::string &key);
 
@@ -43,6 +48,6 @@ namespace redis::module::test {
 
 }
 
-#include "test_bloombase_commands.tpp"
+#include "test_redisbloom_commands.tpp"
 
 #endif

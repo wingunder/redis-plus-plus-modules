@@ -14,8 +14,8 @@
  * limitations under the License.
  **/
 
-#ifndef REDIS_MODULE_TEST_BLOOMBASE_COMMAND_TPP
-#define REDIS_MODULE_TEST_BLOOMBASE_COMMAND_TPP
+#ifndef REDIS_MODULE_TEST_REDIS_BLOOM_COMMAND_TPP
+#define REDIS_MODULE_TEST_REDIS_BLOOM_COMMAND_TPP
 
 #include <sw/redis++/redis++.h>
 #include "../redis-plus-plus/test/src/sw/redis++/utils.h"
@@ -23,7 +23,7 @@
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    void BloomBaseCommand<RedisInstance>::test_chunks(BloomCuckooBase<RedisInstance>& bloom, const std::string &key) {
+    void RedisBloomCommand<RedisInstance>::test_chunks(BloomCuckooBase<RedisInstance>& bloom, const std::string &key) {
 
         using Info = std::unordered_map<std::string, sw::redis::OptionalLongLong>;
 
@@ -76,7 +76,7 @@ namespace redis::module::test {
 
     template <typename RedisInstance>
     void
-    BloomBaseCommand<RedisInstance>::getChunks(BloomCuckooBase<RedisInstance>& bloom,
+    RedisBloomCommand<RedisInstance>::getChunks(BloomCuckooBase<RedisInstance>& bloom,
                                                const sw::redis::StringView &key,
                                                std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) {
         long long iter = 0;

@@ -18,21 +18,21 @@
 #define REDIS_MODULE_TEST_CUCKOOFILTER_COMMAND_H
 
 #include <RedisBloom/CuckooFilter.h>
-#include "test_bloombase_commands.h"
+#include "test_redisbloom_commands.h"
 
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    class CuckooFilterCommand : public BloomBaseCommand<RedisInstance>
+    class CuckooFilterCommand : public RedisBloomCommand<RedisInstance>
     {
     public:
         CuckooFilterCommand(RedisInstance &redis)
-            : BloomBaseCommand<RedisInstance>(redis), _bloom(redis) {}
+            : RedisBloomCommand<RedisInstance>(redis), _bloom(redis) {}
 
         void run(const std::string &key);
 
     protected:
-        CuckooFilter<RedisInstance>& redisInstance() { return _bloom; }
+        virtual CuckooFilter<RedisInstance>& redisInstance() { return _bloom; }
 
     private:
         void test_commands(const std::string &key);

@@ -35,7 +35,7 @@ public:
                  long long bucketsize,
                  long long max_iterations = default_max_iterations,
                  long long expansion = default_expansion_rate) {
-        BloomBase<RedisInstance>::_redis.template command<void>
+        RedisBloom<RedisInstance>::_redis.template command<void>
             ("CF.RESERVE",  key, capacity,
              "BUCKETSIZE", bucketsize,
              "MAXITERATIONS",  max_iterations,
@@ -44,12 +44,12 @@ public:
 
     long long addnx(const sw::redis::StringView &key,
                     const sw::redis::StringView &item) {
-        return BloomBase<RedisInstance>::_redis.template command<long long>("CF.ADDNX",  key, item);
+        return RedisBloom<RedisInstance>::_redis.template command<long long>("CF.ADDNX",  key, item);
     }
 
     long long del(const sw::redis::StringView &key,
                   const sw::redis::StringView &item) {
-        return BloomBase<RedisInstance>::_redis.template command<long long>("CF.DEL",  key, item);
+        return RedisBloom<RedisInstance>::_redis.template command<long long>("CF.DEL",  key, item);
     }
 
     template <typename Input, typename Output>
@@ -75,7 +75,7 @@ public:
     template <typename Input, typename Output>
     long long count(const sw::redis::StringView &key,
                     const sw::redis::StringView &item) {
-        return BloomBase<RedisInstance>::_redis.template command<long long>("CF.COUNT",  key, item);
+        return RedisBloom<RedisInstance>::_redis.template command<long long>("CF.COUNT",  key, item);
     }
 
 private:
@@ -95,7 +95,7 @@ private:
         }
         args.push_back("ITEMS");
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     static const long long default_expansion_rate = 1;

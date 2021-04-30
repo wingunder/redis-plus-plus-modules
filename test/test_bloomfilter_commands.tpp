@@ -25,8 +25,8 @@ namespace redis::module::test {
     void BloomFilterCommand<RedisInstance>::run(const std::string &key) {
         test_commands(key);
 
-        BloomBaseCommand<RedisInstance>::test_chunks(_bloom, key);
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::test_chunks(_bloom, key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
     }
 
     template <typename RedisInstance>
@@ -34,7 +34,7 @@ namespace redis::module::test {
 
         const long long capacity = 5000;
         const long long expansion_rate = 3;
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         try {
             // Try to reserve with the wrong error_rate.
@@ -50,13 +50,13 @@ namespace redis::module::test {
         }
 
         _bloom.reserve(key, 0.1, capacity, false);
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         _bloom.reserve(key, 0.1, capacity, false, expansion_rate);
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         _bloom.reserve(key, 0.1, capacity, true);
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         _bloom.reserve(key, 0.1, capacity, true, expansion_rate);
 
@@ -97,11 +97,11 @@ namespace redis::module::test {
                          *(output.at("Capacity")) == capacity,
                          "bf_info failed");
         }
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         insertVerify(key,    0.1, capacity +  0, false, false, 4);
         insertVerify(key,   0.01, capacity + 10, false,  true, 5);
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
         insertVerify(key,  0.001, capacity + 20,  true, false, 6);
         try {
             insertVerify(key, 0.0001, capacity + 30,  true,  true, 7);

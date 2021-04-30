@@ -29,10 +29,10 @@ namespace redis::module::test {
     template <typename RedisInstance>
     void CountMinSketchCommand<RedisInstance>::test_commands(const std::string &key) {
 
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         _bloom.initbydim(key, 2, 5);
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         try {
             _bloom.initbyprob(key, 30, 0.01);
@@ -70,11 +70,11 @@ namespace redis::module::test {
 
         std::vector<std::string> keys = { key + "_1", key + "_2" };
         for (auto k: keys) {
-            BloomBaseCommand<RedisInstance>::_redis.del(k);
+            RedisBloomCommand<RedisInstance>::_redis.del(k);
         }
 
         { // test merge
-            BloomBaseCommand<RedisInstance>::_redis.del(key);
+            RedisBloomCommand<RedisInstance>::_redis.del(key);
             _bloom.initbydim(key, 2, 5);
 
             std::unordered_map<std::string, long long> weighted_keys;
@@ -93,7 +93,7 @@ namespace redis::module::test {
             }
         }
         { // test merge_default_weight
-            BloomBaseCommand<RedisInstance>::_redis.del(key);
+            RedisBloomCommand<RedisInstance>::_redis.del(key);
             _bloom.initbydim(key, 2, 5);
 
             _bloom.template merge_default_weight(key, keys.begin(), keys.end());
@@ -105,7 +105,7 @@ namespace redis::module::test {
             }
 
             for (auto k: keys) {
-                BloomBaseCommand<RedisInstance>::_redis.del(k);
+                RedisBloomCommand<RedisInstance>::_redis.del(k);
             }
         }
 
@@ -119,7 +119,7 @@ namespace redis::module::test {
                          *(output.at("width")) > 0,
                          "cms_info failed");
         }
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
     }
 
 } // namespace

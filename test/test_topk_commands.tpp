@@ -29,7 +29,7 @@ namespace redis::module::test {
     template <typename RedisInstance>
     void TopKCommand<RedisInstance>::test_commands(const std::string &key) {
 
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
 
         REDIS_ASSERT(_bloom.reserve(key, 1), "topk_reserve failed.");
 
@@ -66,7 +66,7 @@ namespace redis::module::test {
                          output.find("decay") != output.end(),
                          "cms_info failed");
         }
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
     }
 
 } // namespace

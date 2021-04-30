@@ -17,15 +17,15 @@
 #ifndef REDIS_PLUS_PLUS_COUNT_MIN_SKETCH_H
 #define REDIS_PLUS_PLUS_COUNT_MIN_SKETCH_H
 
-#include "BloomBase.h"
+#include "RedisBloom.h"
 
 namespace redis::module {
 
 template <typename RedisInstance>
-class CountMinSketch : public BloomBase<RedisInstance>
+class CountMinSketch : public RedisBloom<RedisInstance>
 {
 public:
-    explicit CountMinSketch(RedisInstance& redis) : BloomBase<RedisInstance>(redis, "CMS") {}
+    explicit CountMinSketch(RedisInstance& redis) : RedisBloom<RedisInstance>(redis, "CMS") {}
 
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/CountMinSketch_Commands/
@@ -33,7 +33,7 @@ public:
     void initbydim(const sw::redis::StringView &key,
                    long long width,
                    long long depth) {
-        BloomBase<RedisInstance>::_redis.template command<void>("CMS.INITBYDIM",  key, width, depth);
+        RedisBloom<RedisInstance>::_redis.template command<void>("CMS.INITBYDIM",  key, width, depth);
     }
 
     void initbyprob(const sw::redis::StringView &key,
@@ -46,7 +46,7 @@ public:
             throw sw::redis::Error("Parameter 'probability' is out of range.");
         }
         else {
-            BloomBase<RedisInstance>::_redis.template command<void>("CMS.INITBYPROB",  key, error, probability);
+            RedisBloom<RedisInstance>::_redis.template command<void>("CMS.INITBYPROB",  key, error, probability);
         }
     }
 
@@ -61,7 +61,7 @@ public:
             args.push_back(p.first);
             args.push_back(std::to_string(p.second));
         });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end());
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end());
     }
 
     template <typename Input, typename Output>
@@ -76,7 +76,7 @@ public:
             args.push_back(p.first);
             args.push_back(std::to_string(p.second));
         });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     template <typename Input, typename Output>
@@ -85,7 +85,7 @@ public:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<sw::redis::StringView> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     template <typename Input>
@@ -103,7 +103,7 @@ public:
         std::for_each(first, last, [&args](auto &p){
             args.push_back(std::to_string(p.second));
         });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end());
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end());
     }
 
     template <typename Input>
@@ -118,7 +118,7 @@ public:
         args.push_back("WEIGHTS");
         auto weight = std::to_string(default_merge_weight);
         std::for_each(first, last, [&args, weight](auto&){ args.push_back(weight); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end());
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end());
     }
 
 private:

@@ -17,15 +17,15 @@
 #ifndef REDIS_PLUS_PLUS_TOP_K_H
 #define REDIS_PLUS_PLUS_TOP_K_H
 
-#include "BloomBase.h"
+#include "RedisBloom.h"
 
 namespace redis::module {
 
 template <typename RedisInstance>
-class TopK : public BloomBase<RedisInstance>
+class TopK : public RedisBloom<RedisInstance>
 {
 public:
-    explicit TopK(RedisInstance& redis) : BloomBase<RedisInstance>(redis, "TOPK") {}
+    explicit TopK(RedisInstance& redis) : RedisBloom<RedisInstance>(redis, "TOPK") {}
 
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/TopK_Commands/
@@ -35,7 +35,7 @@ public:
                  long long width = default_width,
                  long long depth = default_depth,
                  double decay = default_decay) {
-        auto result = BloomBase<RedisInstance>::_redis.template
+        auto result = RedisBloom<RedisInstance>::_redis.template
             command<std::string>("TOPK.RESERVE",  key, topk, width, depth, decay);
         return result == "OK";
     }
@@ -46,7 +46,7 @@ public:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<sw::redis::StringView> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     template <typename Input>
@@ -60,7 +60,7 @@ public:
             args.push_back(p.first);
             args.push_back(std::to_string(p.second));
         });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end());
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end());
     }
 
     template <typename Input, typename Output>
@@ -75,7 +75,7 @@ public:
             args.push_back(p.first);
             args.push_back(std::to_string(p.second));
         });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     template <typename Input, typename Output>
@@ -84,7 +84,7 @@ public:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<sw::redis::StringView> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     template <typename Input, typename Output>
@@ -93,20 +93,20 @@ public:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<sw::redis::StringView> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     template <typename Output>
     void list(const sw::redis::StringView &key, Output output) {
         static const std::string cmd = "TOPK.LIST";
         std::vector<sw::redis::StringView> args = { cmd, key };
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), output);
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), output);
     }
 
     // The decay needs to be converted,
     template <typename Output>
     void info(const sw::redis::StringView &key, Output &output) {
-        auto reply = BloomBase<RedisInstance>::_redis.command("TOPK.INFO", key);
+        auto reply = RedisBloom<RedisInstance>::_redis.command("TOPK.INFO", key);
         if (reply == nullptr) {
             throw sw::redis::ProtoError("Null reply");
         }

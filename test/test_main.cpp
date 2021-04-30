@@ -118,6 +118,13 @@ template <typename RedisInstance>
 void run_test(const sw::redis::ConnectionOptions &opts) {
 
     RedisInstance redis(opts);
+    redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
+    sw::redis::OptionalLongLong ver = bf_cmd.version();
+    if (!ver) {
+        std::cout << "Skipped RedisBloom tests, as 'bf' module was not loaded." << std::endl;
+        return;
+    }
+    std::cout << "Testing RedisBloom ('bf') module version " << *ver << std::endl;
     const std::string key = "newFilter";
     {
         redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);

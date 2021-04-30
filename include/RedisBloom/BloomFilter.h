@@ -36,10 +36,10 @@ public:
                  bool nonscaling,
                  long long expansion = default_expansion_rate) {
         if (nonscaling) {
-            BloomBase<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
+            RedisBloom<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion, "NOSCALING");
         }
         else {
-            BloomBase<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
+            RedisBloom<RedisInstance>::_redis.template command<void>("BF.RESERVE",  key, error_rate, capacity, "EXPANSION", expansion);
         };
     }
 
@@ -80,7 +80,7 @@ public:
         }
         args.push_back("ITEMS");
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     template <typename Input, typename Output>
@@ -101,7 +101,7 @@ private:
         sw::redis::range_check(cmd.c_str(), first, last);
         std::vector<sw::redis::StringView> args = { cmd, key };
         std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
-        BloomBase<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
+        RedisBloom<RedisInstance>::_redis.command(args.begin(), args.end(), std::back_inserter(result));
     }
 
     static const long long default_expansion_rate = 2;

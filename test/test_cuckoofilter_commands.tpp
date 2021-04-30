@@ -28,7 +28,7 @@ namespace redis::module::test {
 
         auto cnt = _bloom.add(key, "foo");
         REDIS_ASSERT(cnt == 1, "cf_add failed");
-        BloomBaseCommand<RedisInstance>::test_chunks(_bloom, key);
+        RedisBloomCommand<RedisInstance>::test_chunks(_bloom, key);
     }
 
     template <typename RedisInstance>
@@ -86,7 +86,7 @@ namespace redis::module::test {
                      (long long)(*output.at("Number of items inserted")) == input.size() &&
                      (long long)(*output.at("Number of filters")) == 1,
                      "cf_insert's verification failed");
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
     }
 
     template <typename RedisInstance>
@@ -108,7 +108,7 @@ namespace redis::module::test {
                      (long long)(*output.at("Number of items inserted")) == input.size() &&
                      (long long)(*output.at("Number of filters")) == 1,
                      "cf_insert's verification failed");
-        BloomBaseCommand<RedisInstance>::_redis.del(key);
+        RedisBloomCommand<RedisInstance>::_redis.del(key);
     }
 
 } // namespace
