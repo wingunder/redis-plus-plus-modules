@@ -44,14 +44,33 @@ namespace redis::module::test {
         strlen_ret = _json.strlen(key, ".");
         REDIS_ASSERT(strlen_ret == 3, "json_strlen failed");
 
+        strlen_ret = _json.strappend(key, ".", "000");
+        REDIS_ASSERT(strlen_ret == 6, "json_append failed");
+
+        strlen_ret = _json.strappend(key, "111");
+        REDIS_ASSERT(strlen_ret == 9, "json_append failed");
+
         auto type_ret = _json.type(key);
         REDIS_ASSERT(type_ret == "string", "json_type failed");
 
         type_ret = _json.type(key, ".");
         REDIS_ASSERT(type_ret == "string", "json_type failed");
 
+        auto resp_ret = _json.resp(key);
+        REDIS_ASSERT(resp_ret == "bar000111", "json_resp failed");
+
+        resp_ret = _json.resp(key, ".");
+        REDIS_ASSERT(resp_ret == "bar000111", "json_resp failed");
+
         del_ret = _json.del(key, ".");
         REDIS_ASSERT(del_ret == 1 || del_ret == 0, "json_del failed");
+
+        _json.set(key, ".", 2);
+        auto num_ret = _json.numincrby(key, ".", 2);
+        REDIS_ASSERT(num_ret == 4, "json_numincrby failed");
+
+        num_ret = _json.nummultby(key, ".", 2);
+        REDIS_ASSERT(num_ret == 8, "json_nummultby failed");
 
         del_ret = _json.forget(key);
         REDIS_ASSERT(del_ret == 1 || del_ret == 0, "json_del failed");
