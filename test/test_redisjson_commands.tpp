@@ -62,15 +62,39 @@ namespace redis::module::test {
         resp_ret = _json.resp(key, ".");
         REDIS_ASSERT(resp_ret == "bar000111", "json_resp failed");
 
-        del_ret = _json.del(key, ".");
-        REDIS_ASSERT(del_ret == 1 || del_ret == 0, "json_del failed");
-
+        _json.del(key, ".");
         _json.set(key, ".", 2);
         auto num_ret = _json.numincrby(key, ".", 2);
         REDIS_ASSERT(num_ret == 4, "json_numincrby failed");
 
         num_ret = _json.nummultby(key, ".", 2);
         REDIS_ASSERT(num_ret == 8, "json_nummultby failed");
+
+        _json.del(key, ".");
+        _json.set(key, ".", " [\"a\",\"b\",\"c\",\"d\"]");
+        auto arrlen_ret = _json.arrlen(key, ".");
+        REDIS_ASSERT(arrlen_ret == 4, "json_arrlen failed");
+
+        _json.del(key, ".");
+        std::vector<std::string> inarr = {"{\"a\":1,\"b\":2,\"c\":3}", "{\"a\":3,\"b\":2,\"c\":1}"};
+        _json.set(key, ".", inarr.at(0));
+        const std::string key_1 = key + "_1";
+        _json.set(key_1, ".", inarr.at(1));
+        std::vector<std::string> arr = {key, key_1};
+        std::vector<std::string> result;
+        _json.template mget(arr.begin(), arr.end(), ".", result);
+        REDIS_ASSERT(arr.size() == result.size(), "json_mget failed");
+        for (size_t i=0; i<arr.size(); i++) {
+            REDIS_ASSERT(inarr.at(i) == result.at(i), "json_mget failed");
+        }
+
+        result.clear();
+        _json.template mget(arr.begin(), arr.end(), result);
+        REDIS_ASSERT(arr.size() == result.size(), "json_mget failed");
+        for (size_t i=0; i<arr.size(); i++) {
+            REDIS_ASSERT(inarr.at(i) == result.at(i), "json_mget failed");
+        }
+        _json.del(key_1, ".");
 
         del_ret = _json.forget(key);
         REDIS_ASSERT(del_ret == 1 || del_ret == 0, "json_del failed");

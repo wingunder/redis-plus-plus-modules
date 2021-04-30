@@ -18,6 +18,8 @@
 #define REDIS_PLUS_PLUS_REDIS_JSON_H
 
 #include "Module.h"
+#include <sstream>
+#include <iomanip>
 
 namespace redis::module {
 
@@ -42,6 +44,25 @@ public:
             command<long long>("JSON.DEL", key, path);
     }
 
+    template <typename Input, typename Output>
+    void mget(Input first, Input last,
+              const std::string& path,
+              Output &result) {
+        static const std::string cmd = "JSON.MGET";
+        sw::redis::range_check(cmd.c_str(), first, last);
+        std::vector<sw::redis::StringView> args = { cmd };
+        std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
+        args.push_back(path);
+        Module<RedisInstance>::_redis.template
+            command(args.begin(), args.end(), std::back_inserter(result));
+    }
+
+    template <typename Input, typename Output>
+    void mget(Input first, Input last,
+              Output &result) {
+        mget(first, last, ".", result);
+    }
+
     auto forget(const sw::redis::StringView& key) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.DEL", key);
@@ -56,12 +77,10 @@ public:
     bool set(const sw::redis::StringView& key,
              const sw::redis::StringView& path,
              const sw::redis::StringView& value,
-             const DelOpt& opt = DelOpt::NX) {
+             const DelOpt& opt) {
         auto ret = Module<RedisInstance>::_redis.template
-            // TODO: Find out if we should json-escape value.
             command<sw::redis::OptionalString>
-            ("JSON.SET", key, path,
-             std::string("\"") + value.data() + "\"",
+            ("JSON.SET", key, path, quote_escape(value.data()),
              (opt == DelOpt::NX) ? "NX" : "XX");
         return (ret && *ret == "OK");
     }
@@ -69,12 +88,41 @@ public:
     bool set(const sw::redis::StringView& key,
              const sw::redis::StringView& path,
              long long value,
-             const DelOpt& opt = DelOpt::NX) {
+             const DelOpt& opt) {
         auto ret = Module<RedisInstance>::_redis.template
             command<sw::redis::OptionalString>
             ("JSON.SET", key, path, value,
              (opt == DelOpt::NX) ? "NX" : "XX");
         return (ret && *ret == "OK");
+    }
+
+    bool set(const sw::redis::StringView& key,
+             const sw::redis::StringView& path,
+             const sw::redis::StringView& value) {
+        auto ret = Module<RedisInstance>::_redis.template
+            command<sw::redis::OptionalString>
+            ("JSON.SET", key, path, quote_escape(value.data()));
+        return (ret && *ret == "OK");
+    }
+
+    bool set(const sw::redis::StringView& key,
+             const sw::redis::StringView& path,
+             long long value) {
+        auto ret = Module<RedisInstance>::_redis.template
+            command<sw::redis::OptionalString>
+            ("JSON.SET", key, path, value);
+        return (ret && *ret == "OK");
+    }
+
+    auto arrlen(const sw::redis::StringView& key) {
+        return Module<RedisInstance>::_redis.template
+            command<long long>("JSON.ARRLEN", key);
+    }
+
+    auto arrlen(const sw::redis::StringView& key,
+                const sw::redis::StringView& path) {
+        return Module<RedisInstance>::_redis.template
+            command<long long>("JSON.ARRLEN", key, path);
     }
 
     auto strlen(const sw::redis::StringView& key) {
@@ -127,16 +175,57 @@ public:
     auto strappend(const sw::redis::StringView& key,
                    const sw::redis::StringView& str) {
         return Module<RedisInstance>::_redis.template
-            command<long long>("JSON.STRAPPEND", key,
-                               std::string("\"") + str.data() + "\"");
+            command<long long>("JSON.STRAPPEND", key, quote_escape(str.data()));
     }
 
     auto strappend(const sw::redis::StringView& key,
                    const sw::redis::StringView& path,
                    const sw::redis::StringView& str) {
         return Module<RedisInstance>::_redis.template
-            command<long long>("JSON.STRAPPEND", key, path,
-                               std::string("\"") + str.data() + "\"");
+            command<long long>("JSON.STRAPPEND", key, path, quote_escape(str.data()));
+    }
+
+private:
+    bool is_struct(const std::string &s) {
+        if (!s.empty()) {
+            size_t start = s.find_first_not_of(" \n\r\t\f\v");
+            if (start == std::string::npos) {
+                start = 0;
+            }
+            if ((s.at(start) == '{' || s.at(start) == '[')) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::string quote_escape(const std::string &s) {
+        if (is_struct(s)) {
+            return s;
+        }
+        std::ostringstream o;
+        o << "\"";
+        // Taken from: https://stackoverflow.com/a/33799784
+        for (auto c = s.cbegin(); c != s.cend(); c++) {
+            switch (*c) {
+            case '"': o << "\\\""; break;
+            case '\\': o << "\\\\"; break;
+            case '\b': o << "\\b"; break;
+            case '\f': o << "\\f"; break;
+            case '\n': o << "\\n"; break;
+            case '\r': o << "\\r"; break;
+            case '\t': o << "\\t"; break;
+            default:
+                if ('\x00' <= *c && *c <= '\x1f') {
+                    o << "\\u"
+                      << std::hex << std::setw(4) << std::setfill('0') << (int)*c;
+                } else {
+                    o << *c;
+                }
+            }
+        }
+        o << "\"";
+        return o.str();
     }
 
 };
