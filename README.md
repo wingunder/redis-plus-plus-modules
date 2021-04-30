@@ -20,12 +20,16 @@ This library aims to supply a C++ interface to all major/popular Redis modules.
 It uses [redis-plus-plus](https://github.com/sewenew/redis-plus-plus), which
 in turn uses [hiredis](https://github.com/redis/hiredis).
 
-Currently, interfaces for the folowing modules are fully implemented:
+The following Redis Modules are fully implemented:
 
   - [BloomFilter](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
   - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Count-Min-Sketch](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Top-K](https://oss.redislabs.com/redisbloom/TopK_Commands/)
+
+The following Redis Modules are in the process of being implemented:
+
+  - [RedisJSON](https://oss.redislabs.com/redisjson/commands/)
 
 ## Motivation
 
@@ -133,10 +137,11 @@ make test
 
 ## TODO
 
+  - Finish the RedisJSON implementation
   - Add a directory with some examples
   - Add doxygen output
   - Install procedure and at least a Debian package
-  - Add APIs for: RedisJSON, RediSearch, RedisTimeSeries, RedisGraph,
+  - Add APIs for: RediSearch, RedisTimeSeries, RedisGraph,
     RedisAI and RedisGears
   - Add the hackathlon video
 

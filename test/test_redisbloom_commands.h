@@ -25,6 +25,10 @@ namespace redis::module::test {
     class RedisBloomCommand
     {
     public:
+        std::string getModuleName() {
+            return redisInstance().getModuleName();
+        }
+
         sw::redis::OptionalLongLong version() {
             return redisInstance().version();
         }

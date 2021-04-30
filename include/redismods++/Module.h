@@ -32,6 +32,8 @@ public:
         _redis.command(_info_cmd, key, std::inserter(output, output.end()));
     }
 
+    std::string getModuleName() const { return _module_name; }
+
     sw::redis::OptionalLongLong version() {
         auto reply = _redis.command("MODULE", "LIST");
         if (!sw::redis::reply::is_array(*reply)) {

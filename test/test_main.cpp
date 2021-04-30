@@ -25,6 +25,7 @@
 #include "test_cuckoofilter_commands.h"
 #include "test_countminsketch_commands.h"
 #include "test_topk_commands.h"
+#include "test_redisjson_commands.h"
 
 auto parse_options(int argc, char **argv)
     -> std::tuple<sw::redis::Optional<sw::redis::ConnectionOptions>, bool>;
@@ -118,12 +119,13 @@ template <typename RedisInstance>
 void test_redisbloom(RedisInstance &redis) {
 
     redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
+    const auto moduleName = bf_cmd.getModuleName();
     sw::redis::OptionalLongLong ver = bf_cmd.version();
     if (!ver) {
-        std::cout << "Skipped RedisBloom tests, as 'bf' module was not loaded." << std::endl;
+        std::cout << "Skipped RedisBloom tests, as '" << moduleName << "' module was not loaded." << std::endl;
         return;
     }
-    std::cout << "Testing RedisBloom ('bf') module version " << *ver << std::endl;
+    std::cout << "Testing RedisBloom ('" << moduleName << "') module version " << *ver << std::endl;
     const std::string key = "newFilter";
     {
         redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
@@ -150,8 +152,19 @@ void test_redisbloom(RedisInstance &redis) {
 }
 
 template <typename RedisInstance>
+void test_redisjson(RedisInstance &redis) {
+
+    redis::module::test::RedisJSONCommand<RedisInstance> json_cmd(redis);
+
+    json_cmd.run("json_test_key");
+
+    std::cout << "Passed RedisJSON tests" << std::endl;
+}
+
+template <typename RedisInstance>
 void run_test(const sw::redis::ConnectionOptions &opts) {
 
     RedisInstance redis(opts);
     test_redisbloom(redis);
+    test_redisjson(redis);
 }
