@@ -17,7 +17,7 @@
 #ifndef REDIS_MODULE_TEST_REDIS_BLOOM_COMMAND_H
 #define REDIS_MODULE_TEST_REDIS_BLOOM_COMMAND_H
 
-#include <RedisBloom/RedisBloom.h>
+#include <redismods++/RedisBloom.h>
 
 namespace redis::module::test {
 

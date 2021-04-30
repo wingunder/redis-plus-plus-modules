@@ -17,7 +17,7 @@
 #ifndef REDIS_MODULE_TEST_COUNT_MIN_SCETCH_COMMAND_H
 #define REDIS_MODULE_TEST_COUNT_MIN_SCETCH_COMMAND_H
 
-#include <RedisBloom/CountMinSketch.h>
+#include <redismods++/CountMinSketch.h>
 #include "test_redisbloom_commands.h"
 
 namespace redis::module::test {

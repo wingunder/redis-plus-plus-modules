@@ -115,9 +115,8 @@ auto parse_options(int argc, char **argv)
 }
 
 template <typename RedisInstance>
-void run_test(const sw::redis::ConnectionOptions &opts) {
+void test_redisbloom(RedisInstance &redis) {
 
-    RedisInstance redis(opts);
     redis::module::test::BloomFilterCommand<RedisInstance> bf_cmd(redis);
     sw::redis::OptionalLongLong ver = bf_cmd.version();
     if (!ver) {
@@ -148,4 +147,11 @@ void run_test(const sw::redis::ConnectionOptions &opts) {
     }
 
     std::cout << "Passed RedisBloom tests" << std::endl;
+}
+
+template <typename RedisInstance>
+void run_test(const sw::redis::ConnectionOptions &opts) {
+
+    RedisInstance redis(opts);
+    test_redisbloom(redis);
 }

@@ -17,7 +17,7 @@
 #ifndef REDIS_MODULE_TEST_CUCKOOFILTER_COMMAND_H
 #define REDIS_MODULE_TEST_CUCKOOFILTER_COMMAND_H
 
-#include <RedisBloom/CuckooFilter.h>
+#include <redismods++/CuckooFilter.h>
 #include "test_redisbloom_commands.h"
 
 namespace redis::module::test {

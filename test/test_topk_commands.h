@@ -17,7 +17,7 @@
 #ifndef REDIS_MODULE_TEST_TOP_K_COMMAND_H
 #define REDIS_MODULE_TEST_TOP_K_COMMAND_H
 
-#include <RedisBloom/TopK.h>
+#include <redismods++/TopK.h>
 #include "test_redisbloom_commands.h"
 
 namespace redis::module::test {
