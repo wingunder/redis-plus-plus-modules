@@ -21,12 +21,12 @@ lib/libhiredis.a lib/libhiredis.so:
 clean-local:
 	rm -rf build include lib share
 
-test/test_redisbloom:
-	$(MAKE) -C test test_redisbloom
+test/test_redismodules:
+	$(MAKE) -C test test_redismodules
 
-test: test/test_redisbloom
-	$(MAKE) -C test test_redisbloom
-	LD_LIBRARY_PATH=./lib ./test/test_redisbloom
+test: test/test_redismodules
+	$(MAKE) -C test test_redismodules
+	LD_LIBRARY_PATH=./lib ./test/test_redismodules
 
 .PRECIOUS: build
 

@@ -1,2 +1,2 @@
-test_redisbloom
-test_redisbloom-test_main.o
+test_redismodules
+test_redismodules-test_main.o
