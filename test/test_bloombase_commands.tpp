@@ -23,22 +23,22 @@
 namespace redis::module::test {
 
     template <typename RedisInstance>
-    void BloomBaseCommand<RedisInstance>::test_chunks(const std::string &key) {
+    void BloomBaseCommand<RedisInstance>::test_chunks(BloomCuckooBase<RedisInstance>& bloom, const std::string &key) {
 
         using Info = std::unordered_map<std::string, sw::redis::OptionalLongLong>;
 
         Info chunk_info;
-        redisInstance().info(key, chunk_info);
+        bloom.info(key, chunk_info);
         std::vector<std::pair<long long, std::vector<unsigned char>>> chunks;
-        getChunks(key, chunks);
+        getChunks(bloom, key, chunks);
 
         _redis.del(key);
         for (const auto& chunk : chunks) {
-            redisInstance().loadchunk(key, chunk);
+            bloom.loadchunk(key, chunk);
         }
 
         std::vector<std::pair<long long, std::vector<unsigned char>>> verify_chunks;
-        getChunks(key, verify_chunks);
+        getChunks(bloom, key, verify_chunks);
 
         // Revert to some more basic chunk checks, as a full match never occurs.
         REDIS_ASSERT(chunks.size() == verify_chunks.size(),
@@ -60,7 +60,7 @@ namespace redis::module::test {
         //REDIS_ASSERT(chunks == verify_chunks, "loadchunk failed");
 
         Info verify_chunk_info;
-        redisInstance().info(key, verify_chunk_info);
+        bloom.info(key, verify_chunk_info);
 
         // The following doesn't work:
 
@@ -76,12 +76,13 @@ namespace redis::module::test {
 
     template <typename RedisInstance>
     void
-    BloomBaseCommand<RedisInstance>::getChunks(const sw::redis::StringView &key,
-                                                 std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) {
+    BloomBaseCommand<RedisInstance>::getChunks(BloomCuckooBase<RedisInstance>& bloom,
+                                               const sw::redis::StringView &key,
+                                               std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks) {
         long long iter = 0;
         std::pair<long long, std::vector<unsigned char>> result;
         for (;;) {
-            iter = redisInstance().template scandump(key, iter, result);
+            iter = bloom.template scandump(key, iter, result);
             if (iter == 0) { break; }
             chunks.push_back(result);
         }

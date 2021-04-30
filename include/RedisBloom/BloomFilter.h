@@ -17,15 +17,15 @@
 #ifndef REDIS_PLUS_PLUS_BLOOM_FILTER_H
 #define REDIS_PLUS_PLUS_BLOOM_FILTER_H
 
-#include "BloomBase.h"
+#include "BloomCuckooBase.h"
 
 namespace redis::module {
 
 template <typename RedisInstance>
-class BloomFilter : public BloomBase<RedisInstance>
+class BloomFilter : public BloomCuckooBase<RedisInstance>
 {
 public:
-    explicit BloomFilter(RedisInstance& redis) : BloomBase<RedisInstance>(redis, "BF") {}
+    explicit BloomFilter(RedisInstance& redis) : BloomCuckooBase<RedisInstance>(redis, "BF") {}
 
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/Bloom_Commands/

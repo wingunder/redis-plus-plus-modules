@@ -25,7 +25,7 @@ namespace redis::module::test {
     void BloomFilterCommand<RedisInstance>::run(const std::string &key) {
         test_commands(key);
 
-        BloomBaseCommand<RedisInstance>::test_chunks(key);
+        BloomBaseCommand<RedisInstance>::test_chunks(_bloom, key);
         BloomBaseCommand<RedisInstance>::_redis.del(key);
     }
 

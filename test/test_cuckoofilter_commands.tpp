@@ -28,22 +28,22 @@ namespace redis::module::test {
 
         auto cnt = _bloom.add(key, "foo");
         REDIS_ASSERT(cnt == 1, "cf_add failed");
-        BloomBaseCommand<RedisInstance>::test_chunks(key);
+        BloomBaseCommand<RedisInstance>::test_chunks(_bloom, key);
     }
 
     template <typename RedisInstance>
     void CuckooFilterCommand<RedisInstance>::test_commands(const std::string &key) {
         {
-            auto cnt = redisInstance().add(key, "foo");
+            auto cnt = _bloom.add(key, "foo");
             REDIS_ASSERT(cnt == 1, "cf_add failed");
 
-            auto exists = redisInstance().exists(key, "foo");
+            auto exists = _bloom.exists(key, "foo");
             REDIS_ASSERT(exists, "cf_exists failed");
 
-            auto deleted = redisInstance().del(key, "foo");
+            auto deleted = _bloom.del(key, "foo");
             REDIS_ASSERT(deleted, "cf_del failed");
 
-            exists = redisInstance().exists(key, "foo");
+            exists = _bloom.exists(key, "foo");
             REDIS_ASSERT(!exists, "cf_del failed as it still exists");
         }
 

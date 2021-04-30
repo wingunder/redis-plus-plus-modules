@@ -29,14 +29,14 @@ namespace redis::module::test {
             : _redis(redis) {}
 
         virtual void run(const std::string &key) = 0;
-        virtual BloomBase<RedisInstance>& redisInstance() = 0;
 
-        void test_chunks(const std::string &key);
+        void test_chunks(BloomCuckooBase<RedisInstance>& bloom, const std::string &key);
 
         RedisInstance &_redis;
 
     private:
-        void getChunks(const sw::redis::StringView &key,
+        void getChunks(BloomCuckooBase<RedisInstance>& bloom,
+                       const sw::redis::StringView &key,
                        std::vector<std::pair<long long, std::vector<unsigned char>>>& chunks);
 
     };

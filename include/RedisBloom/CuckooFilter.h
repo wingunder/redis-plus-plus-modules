@@ -17,15 +17,15 @@
 #ifndef REDIS_PLUS_PLUS_CUCKOO_FILTER_H
 #define REDIS_PLUS_PLUS_CUCKOO_FILTER_H
 
-#include "BloomBase.h"
+#include "BloomCuckooBase.h"
 
 namespace redis::module {
 
 template <typename RedisInstance>
-class CuckooFilter : public BloomBase<RedisInstance>
+class CuckooFilter : public BloomCuckooBase<RedisInstance>
 {
 public:
-    explicit CuckooFilter(RedisInstance &redis) : BloomBase<RedisInstance>(redis, "CF") {}
+    explicit CuckooFilter(RedisInstance &redis) : BloomCuckooBase<RedisInstance>(redis, "CF") {}
 
     // The following is an implementation of:
     //   https://oss.redislabs.com/redisbloom/Cuckoo_Commands/
