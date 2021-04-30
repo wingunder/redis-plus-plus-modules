@@ -69,12 +69,13 @@ to get started with this is to simply head off to
 their instructions to get a docker image installed and running, which
 will supply this.
 
-Another option is to use a docker image. The [RedisBllom Quickstart
-Guide](https://oss.redislabs.com/redisbloom/Quick_Start/)
-suggests the following:
+The following commands, adapted from the [RedisLabs redismod
+docker page](https://hub.docker.com/r/redislabs/redismod) should start
+a docker image that contains all relevant modules:
 
 ```console
-docker run -p 6379:6379 --name redis-redisbloom redislabs/rebloom:latest
+$ docker pull redislabs/redismod
+$ docker run -p 6379:6379 redislabs/redismod
 ```
 
 Once your Redis database is set up and running, you can run the
@@ -82,13 +83,37 @@ Once your Redis database is set up and running, you can run the
 ```console
 $ redis-cli MODULE LIST
 1) 1) "name"
+   2) "ai"
+   3) "ver"
+   4) (integer) 10002
+2) 1) "name"
+   2) "ReJSON"
+   3) "ver"
+   4) (integer) 10007
+3) 1) "name"
    2) "bf"
    3) "ver"
    4) (integer) 20205
+4) 1) "name"
+   2) "search"
+   3) "ver"
+   4) (integer) 20006
+5) 1) "name"
+   2) "timeseries"
+   3) "ver"
+   4) (integer) 10408
+6) 1) "name"
+   2) "rg"
+   3) "ver"
+   4) (integer) 10006
+7) 1) "name"
+   2) "graph"
+   3) "ver"
+   4) (integer) 20402
 ```
-In the above example, the BloomFilter module is loaded, which supplies
-BloomFilter (BF), CuckooFilter (CF), Count-Min-Sketch (CMS) and Top-K
-(TOPK).
+In the above example, 7 modules are available. The 3rd module,
+BloomFilter (bf), supplies BloomFilter (BF), CuckooFilter (CF),
+Count-Min-Sketch (CMS) and Top-K (TOPK).
 
 The `./test` directory contains test cases for all implemented API
 calls. In order to run the tests, simply run:
