@@ -80,22 +80,47 @@ namespace redis::module::test {
         _json.set(key, ".", inarr.at(0));
         const std::string key_1 = key + "_1";
         _json.set(key_1, ".", inarr.at(1));
-        std::vector<std::string> arr = {key, key_1};
-        std::vector<std::string> result;
-        _json.template mget(arr.begin(), arr.end(), ".", result);
-        REDIS_ASSERT(arr.size() == result.size(), "json_mget failed");
-        for (size_t i=0; i<arr.size(); i++) {
-            REDIS_ASSERT(inarr.at(i) == result.at(i), "json_mget failed");
-        }
+        {
+            std::vector<std::string> arr = {key, key_1};
+            std::vector<std::string> result;
+            _json.template mget(arr.begin(), arr.end(), ".", result);
+            REDIS_ASSERT(arr.size() == result.size(), "json_mget failed");
+            for (size_t i=0; i<arr.size(); i++) {
+                REDIS_ASSERT(inarr.at(i) == result.at(i), "json_mget failed");
+            }
 
-        result.clear();
-        _json.template mget(arr.begin(), arr.end(), result);
-        REDIS_ASSERT(arr.size() == result.size(), "json_mget failed");
-        for (size_t i=0; i<arr.size(); i++) {
-            REDIS_ASSERT(inarr.at(i) == result.at(i), "json_mget failed");
+            result.clear();
+            _json.template mget(arr.begin(), arr.end(), result);
+            REDIS_ASSERT(arr.size() == result.size(), "json_mget failed");
+            for (size_t i=0; i<arr.size(); i++) {
+                REDIS_ASSERT(inarr.at(i) == result.at(i), "json_mget failed");
+            }
         }
         _json.del(key_1, ".");
 
+        std::vector<std::string> paths = {"a", "c"};
+        {
+            std::string result = _json.template get(key, paths.begin(), paths.end());
+            REDIS_ASSERT(result == "{\"a\":1,\"c\":3}", "json_get failed");
+        }
+        {
+            std::string result = _json.template get(key, paths.begin(), paths.end(), "\t");
+            REDIS_ASSERT(result == "{\t\"a\":1,\t\"c\":3}", "json_get failed");
+        }
+        {
+            std::string result = _json.template get(key, paths.begin(), paths.end(), "\t", "\n");
+            std::cout << result << std::endl;
+            REDIS_ASSERT(result == "{\n\t\"a\":1,\n\t\"c\":3\n}", "json_get failed");
+        }
+        {
+            _json.set(key, "c", "\x0002");
+            std::string result = _json.template get(key, paths.begin(), paths.end(), "\t", "\n", " ");
+            REDIS_ASSERT(result == "{\n\t\"a\": 1,\n\t\"c\": \"\\u0002\"\n}", "json_get failed");
+        }
+        {
+            std::string result = _json.template get(key, paths.begin(), paths.end(), "\t", "\n", " ", true);
+            REDIS_ASSERT(result == "{\n\t\"a\": 1,\n\t\"c\": \"\x0002\"\n}", "json_get failed");
+        }
         del_ret = _json.forget(key);
         REDIS_ASSERT(del_ret == 1 || del_ret == 0, "json_del failed");
 

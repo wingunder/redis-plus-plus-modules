@@ -44,6 +44,36 @@ public:
             command<long long>("JSON.DEL", key, path);
     }
 
+    template <typename Input>
+    auto get(const sw::redis::StringView& key,
+             Input first, Input last,
+             const sw::redis::StringView &indent = "",
+             const sw::redis::StringView &newline = "",
+             const sw::redis::StringView &space = "",
+             bool noescape = false) {
+        static const std::string cmd = "JSON.GET";
+        sw::redis::range_check(cmd.c_str(), first, last);
+        std::vector<sw::redis::StringView> args = { cmd, key };
+        if (indent.data() != "") {
+            args.push_back("INDENT");
+            args.push_back(indent);
+        }
+        if (newline.data() != "") {
+            args.push_back("NEWLINE");
+            args.push_back(newline);
+        }
+        if (space.data() != "") {
+            args.push_back("SPACE");
+            args.push_back(space);
+        }
+        if (noescape) {
+            args.push_back("NOESCAPE");
+        }
+        std::for_each(first, last, [&args](auto &s){ args.push_back(s); });
+        return Module<RedisInstance>::_redis.template
+            command<std::string>(args.begin(), args.end());
+    }
+
     template <typename Input, typename Output>
     void mget(Input first, Input last,
               const std::string& path,
