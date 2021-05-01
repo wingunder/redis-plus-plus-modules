@@ -35,6 +35,8 @@ namespace redis::module::test {
         }
 
     private:
+        void test_arr(const std::string &key);
+
         RedisInstance &_redis;
         redis::module::RedisJSON<RedisInstance> _json;
     };

@@ -33,19 +33,19 @@ public:
         : Module<RedisInstance>(redis, "ReJSON", "JSON")
         {}
 
-    auto del(const sw::redis::StringView& key) {
+    auto del(const sw::redis::StringView &key) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.DEL", key);
     }
 
-    auto del(const sw::redis::StringView& key,
-             const sw::redis::StringView& path) {
+    auto del(const sw::redis::StringView &key,
+             const sw::redis::StringView &path) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.DEL", key, path);
     }
 
     template <typename Input>
-    auto get(const sw::redis::StringView& key,
+    auto get(const sw::redis::StringView &key,
              Input first, Input last,
              const sw::redis::StringView &indent = "",
              const sw::redis::StringView &newline = "",
@@ -74,6 +74,16 @@ public:
             command<std::string>(args.begin(), args.end());
     }
 
+    auto get(const sw::redis::StringView &key,
+             const sw::redis::StringView &path,
+             const sw::redis::StringView &indent = "",
+             const sw::redis::StringView &newline = "",
+             const sw::redis::StringView &space = "",
+             bool noescape = false) {
+        std::vector<sw::redis::StringView> p = {path};
+        return get(key, p.begin(), p.end(), indent, newline, space, noescape);
+    }
+
     template <typename Input, typename Output>
     void mget(Input first, Input last,
               const std::string& path,
@@ -93,30 +103,30 @@ public:
         mget(first, last, ".", result);
     }
 
-    auto forget(const sw::redis::StringView& key) {
+    auto forget(const sw::redis::StringView &key) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.DEL", key);
     }
 
-    auto forget(const sw::redis::StringView& key,
-                const sw::redis::StringView& path) {
+    auto forget(const sw::redis::StringView &key,
+                const sw::redis::StringView &path) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.DEL", key, path);
     }
 
-    bool set(const sw::redis::StringView& key,
-             const sw::redis::StringView& path,
-             const sw::redis::StringView& value,
+    bool set(const sw::redis::StringView &key,
+             const sw::redis::StringView &path,
+             const sw::redis::StringView &value,
              const DelOpt& opt) {
         auto ret = Module<RedisInstance>::_redis.template
             command<sw::redis::OptionalString>
-            ("JSON.SET", key, path, quote_escape(value.data()),
+            ("JSON.SET", key, path, value.data(),
              (opt == DelOpt::NX) ? "NX" : "XX");
         return (ret && *ret == "OK");
     }
 
-    bool set(const sw::redis::StringView& key,
-             const sw::redis::StringView& path,
+    bool set(const sw::redis::StringView &key,
+             const sw::redis::StringView &path,
              long long value,
              const DelOpt& opt) {
         auto ret = Module<RedisInstance>::_redis.template
@@ -126,17 +136,17 @@ public:
         return (ret && *ret == "OK");
     }
 
-    bool set(const sw::redis::StringView& key,
-             const sw::redis::StringView& path,
-             const sw::redis::StringView& value) {
+    bool set(const sw::redis::StringView &key,
+             const sw::redis::StringView &path,
+             const sw::redis::StringView &value) {
         auto ret = Module<RedisInstance>::_redis.template
             command<sw::redis::OptionalString>
-            ("JSON.SET", key, path, quote_escape(value.data()));
+            ("JSON.SET", key, path, value.data());
         return (ret && *ret == "OK");
     }
 
-    bool set(const sw::redis::StringView& key,
-             const sw::redis::StringView& path,
+    bool set(const sw::redis::StringView &key,
+             const sw::redis::StringView &path,
              long long value) {
         auto ret = Module<RedisInstance>::_redis.template
             command<sw::redis::OptionalString>
@@ -144,118 +154,167 @@ public:
         return (ret && *ret == "OK");
     }
 
-    auto arrlen(const sw::redis::StringView& key) {
+    auto arrlen(const sw::redis::StringView &key) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.ARRLEN", key);
     }
 
-    auto arrlen(const sw::redis::StringView& key,
-                const sw::redis::StringView& path) {
+    auto arrlen(const sw::redis::StringView &key,
+                const sw::redis::StringView &path) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.ARRLEN", key, path);
     }
 
-    auto strlen(const sw::redis::StringView& key) {
+    auto arrpop(const sw::redis::StringView &key,
+                const sw::redis::StringView &path,
+                long long index = -1) {
+        return Module<RedisInstance>::_redis.template
+            command<std::string>("JSON.ARRPOP", key, path, index);
+    }
+
+    auto arrpop(const sw::redis::StringView &key) {
+        return Module<RedisInstance>::_redis.template
+            command<std::string>("JSON.ARRPOP", key);
+    }
+
+    template <typename Input>
+    auto arrinsert(const sw::redis::StringView &key,
+                   const sw::redis::StringView &path,
+                   long long index,
+                   Input first, Input last) {
+        static const std::string cmd = "JSON.ARRINSERT";
+        sw::redis::range_check(cmd.c_str(), first, last);
+        std::vector<std::string> args = { cmd, key.data(), path.data(), std::to_string(index) };
+        std::for_each(first, last, [this, &args](auto &s){
+            args.push_back(s.data());
+        });
+        return Module<RedisInstance>::_redis.template
+            command<long long>(args.begin(), args.end());
+    }
+
+    auto arrinsert(const sw::redis::StringView &key,
+                   const sw::redis::StringView &path,
+                   long long index,
+                   const sw::redis::StringView &json) {
+        std::vector<std::string> j = {json.data()};
+        return arrinsert(key, path, index, j.begin(), j.end());
+    }
+
+    template <typename Input>
+    auto arrappend(const sw::redis::StringView &key,
+                   const sw::redis::StringView &path,
+                   Input first, Input last) {
+        static const std::string cmd = "JSON.ARRAPPEND";
+        sw::redis::range_check(cmd.c_str(), first, last);
+        std::vector<std::string> args = { cmd, key.data(), path.data() };
+        std::for_each(first, last, [this, &args](auto &s){
+            args.push_back(s);
+        });
+        return Module<RedisInstance>::_redis.template
+            command<long long>(args.begin(), args.end());
+    }
+
+    auto arrtrim(const sw::redis::StringView &key,
+                 const sw::redis::StringView &path,
+                 long long from,
+                 long long to) {
+        return Module<RedisInstance>::_redis.template
+            command<long long>("JSON.ARRTRIM", key, path, from, to);
+    }
+
+    auto arrindex(const sw::redis::StringView &key,
+                  const sw::redis::StringView &path,
+                  const sw::redis::StringView &json,
+                  long long from = 0,
+                  long long to = 0) {
+        return Module<RedisInstance>::_redis.template
+            command<long long>("JSON.ARRINDEX", key, path, json, std::to_string(from), std::to_string(to));
+    }
+
+    auto strlen(const sw::redis::StringView &key) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.STRLEN", key);
     }
 
-    auto strlen(const sw::redis::StringView& key,
-                const sw::redis::StringView& path) {
+    auto strlen(const sw::redis::StringView &key,
+                const sw::redis::StringView &path) {
         return Module<RedisInstance>::_redis.template
             command<long long>("JSON.STRLEN", key, path);
     }
 
-    auto type(const sw::redis::StringView& key) {
+    auto type(const sw::redis::StringView &key) {
         return Module<RedisInstance>::_redis.template
             command<std::string>("JSON.TYPE", key);
     }
 
-    auto type(const sw::redis::StringView& key,
-              const sw::redis::StringView& path) {
+    auto type(const sw::redis::StringView &key,
+              const sw::redis::StringView &path) {
         return Module<RedisInstance>::_redis.template
             command<std::string>("JSON.TYPE", key, path);
     }
 
-    auto resp(const sw::redis::StringView& key) {
+    auto resp(const sw::redis::StringView &key) {
         return Module<RedisInstance>::_redis.template
             command<std::string>("JSON.RESP", key);
     }
 
-    auto resp(const sw::redis::StringView& key,
-              const sw::redis::StringView& path) {
+    auto resp(const sw::redis::StringView &key,
+              const sw::redis::StringView &path) {
         return Module<RedisInstance>::_redis.template
             command<std::string>("JSON.RESP", key, path);
     }
 
-    auto numincrby(const sw::redis::StringView& key,
-                   const sw::redis::StringView& path,
+    auto numincrby(const sw::redis::StringView &key,
+                   const sw::redis::StringView &path,
                    long long num) {
         return std::stoll(Module<RedisInstance>::_redis.template
                           command<std::string>("JSON.NUMINCRBY", key, path, num));
     }
 
-    auto nummultby(const sw::redis::StringView& key,
-                   const sw::redis::StringView& path,
+    auto nummultby(const sw::redis::StringView &key,
+                   const sw::redis::StringView &path,
                    long long num) {
         return std::stoll(Module<RedisInstance>::_redis.template
                           command<std::string>("JSON.NUMMULTBY", key, path, num));
     }
 
-    auto strappend(const sw::redis::StringView& key,
-                   const sw::redis::StringView& str) {
+    auto strappend(const sw::redis::StringView &key,
+                   const sw::redis::StringView &str) {
         return Module<RedisInstance>::_redis.template
-            command<long long>("JSON.STRAPPEND", key, quote_escape(str.data()));
+            command<long long>("JSON.STRAPPEND", key, str.data());
     }
 
-    auto strappend(const sw::redis::StringView& key,
-                   const sw::redis::StringView& path,
-                   const sw::redis::StringView& str) {
+    auto strappend(const sw::redis::StringView &key,
+                   const sw::redis::StringView &path,
+                   const sw::redis::StringView &str) {
         return Module<RedisInstance>::_redis.template
-            command<long long>("JSON.STRAPPEND", key, path, quote_escape(str.data()));
+            command<long long>("JSON.STRAPPEND", key, path, str.data());
     }
 
-private:
-    bool is_struct(const std::string &s) {
-        if (!s.empty()) {
-            size_t start = s.find_first_not_of(" \n\r\t\f\v");
-            if (start == std::string::npos) {
-                start = 0;
-            }
-            if ((s.at(start) == '{' || s.at(start) == '[')) {
-                return true;
-            }
-        }
-        return false;
+    template <typename Output>
+    void objkeys(const sw::redis::StringView &key,
+                 const sw::redis::StringView &path,
+                 Output &result) {
+        Module<RedisInstance>::_redis.template
+            command("JSON.OBJKEYS", key, path, std::back_inserter(result));
     }
 
-    std::string quote_escape(const std::string &s) {
-        if (is_struct(s)) {
-            return s;
-        }
-        std::ostringstream o;
-        o << "\"";
-        // Taken from: https://stackoverflow.com/a/33799784
-        for (auto c = s.cbegin(); c != s.cend(); c++) {
-            switch (*c) {
-            case '"': o << "\\\""; break;
-            case '\\': o << "\\\\"; break;
-            case '\b': o << "\\b"; break;
-            case '\f': o << "\\f"; break;
-            case '\n': o << "\\n"; break;
-            case '\r': o << "\\r"; break;
-            case '\t': o << "\\t"; break;
-            default:
-                if ('\x00' <= *c && *c <= '\x1f') {
-                    o << "\\u"
-                      << std::hex << std::setw(4) << std::setfill('0') << (int)*c;
-                } else {
-                    o << *c;
-                }
-            }
-        }
-        o << "\"";
-        return o.str();
+    template <typename Output>
+    void objkeys(const sw::redis::StringView &key,
+                 Output &result) {
+        Module<RedisInstance>::_redis.template
+            command("JSON.OBJKEYS", key, std::back_inserter(result));
+    }
+
+    auto objlen(const sw::redis::StringView &key,
+                const sw::redis::StringView &path) {
+        return Module<RedisInstance>::_redis.template
+            command<long long>("JSON.OBJLEN", key, path);
+    }
+
+    auto objlen(const sw::redis::StringView &key) {
+        return Module<RedisInstance>::_redis.template
+            command<long long>("JSON.OBJLEN", key);
     }
 
 };
