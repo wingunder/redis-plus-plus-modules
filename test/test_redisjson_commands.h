@@ -35,6 +35,13 @@ namespace redis::module::test {
         }
 
     private:
+        void test_del(const std::string &key);
+        void test_objects(const std::string &key);
+        void test_mget(const std::string &key);
+        void test_get(const std::string &key);
+        void test_numbers(const std::string &key);
+        void test_strings(const std::string &key);
+        void test_debug(const std::string &key);
         void test_arr(const std::string &key);
 
         RedisInstance &_redis;

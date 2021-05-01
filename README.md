@@ -26,10 +26,11 @@ The following Redis Modules are fully implemented:
   - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Count-Min-Sketch](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Top-K](https://oss.redislabs.com/redisbloom/TopK_Commands/)
+  - [RedisJSON](https://oss.redislabs.com/redisjson/commands/)
 
 The following Redis Modules are in the process of being implemented:
 
-  - [RedisJSON](https://oss.redislabs.com/redisjson/commands/)
+  - [RedisGRAPH](https://oss.redislabs.com/redisgraph/commands/)
 
 ## Motivation
 
@@ -134,23 +135,17 @@ make test
   - [CuckooFilter](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Count-Min-Sketch](https://oss.redislabs.com/redisbloom/Cuckoo_Commands/)
   - [Top-K](https://oss.redislabs.com/redisbloom/TopK_Commands/)
+  - [RedisJSON](https://oss.redislabs.com/redisjson/commands/)
+  - [RedisGRAPH](https://oss.redislabs.com/redisgraph/commands/)
 
 ## TODO
 
-  - Finish the RedisJSON implementation
+  - Finish the RedisGraph implementation
   - Add a directory with some examples
   - Add doxygen output
   - Install procedure and at least a Debian package
-  - Add APIs for: RediSearch, RedisTimeSeries, RedisGraph,
-    RedisAI and RedisGears
+  - Add APIs for: RediSearch, RedisTimeSeries, RedisAI and RedisGears
   - Add the hackathlon video
-
-## Conclusion
-
-Not yet, but it will be something like:
-   - Making this library was pretty easy and it should be trivial to
-   extend it with future Redis modules.
-   - It's not done yet. (Registered TM) :)
 
 ## Contributing
 

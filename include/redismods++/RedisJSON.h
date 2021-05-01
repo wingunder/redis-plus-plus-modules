@@ -317,6 +317,16 @@ public:
             command<long long>("JSON.OBJLEN", key);
     }
 
+    auto debugmem(const sw::redis::StringView &key,
+                  const sw::redis::StringView &path) {
+        return Module<RedisInstance>::_redis.template
+            command<sw::redis::OptionalLongLong>("JSON.DEBUG", "MEMORY", key, path);
+    }
+
+    auto debugmem(const sw::redis::StringView &key) {
+        return Module<RedisInstance>::_redis.template
+            command<sw::redis::OptionalLongLong>("JSON.DEBUG", "MEMORY", key);
+    }
 };
 
 } // namespace
