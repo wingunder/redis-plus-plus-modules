@@ -7,7 +7,6 @@
 - [Quickstart](#quickstart)
 - [APIs](#apis)
 - [TODO](#todo)
-- [Conclusion](#conclusion)
 - [Contributing](#contributing)
 - [Authors](#authors)
 - [Copyright](#copyright)
@@ -177,4 +176,4 @@ This project was started during the RedisConf 2021 hackathlon.
    - [Redis](https://redis.io/)
    - [redis-plus-plus](https://github.com/sewenew/redis-plus-plus)
    - [hiredis](https://github.com/redis/hiredis)
-   - [RedisBloom](https://oss.redislabs.com/redisbloom/Bloom_Commands/)
+   - [RedisLabs Community Projects](https://redislabs.com/community/oss-projects/)
