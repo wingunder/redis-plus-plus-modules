@@ -26,6 +26,7 @@
 #include "test_countminsketch_commands.h"
 #include "test_topk_commands.h"
 #include "test_redisjson_commands.h"
+#include "test_redisgraph_commands.h"
 
 auto parse_options(int argc, char **argv)
     -> std::tuple<sw::redis::Optional<sw::redis::ConnectionOptions>, bool>;
@@ -162,9 +163,20 @@ void test_redisjson(RedisInstance &redis) {
 }
 
 template <typename RedisInstance>
+void test_redisgraph(RedisInstance &redis) {
+
+    redis::module::test::RedisGraphCommand<RedisInstance> graph_cmd(redis);
+
+    graph_cmd.run("graph_test_key");
+
+    std::cout << "Passed RedisGraph tests" << std::endl;
+}
+
+template <typename RedisInstance>
 void run_test(const sw::redis::ConnectionOptions &opts) {
 
     RedisInstance redis(opts);
     test_redisbloom(redis);
     test_redisjson(redis);
+    test_redisgraph(redis);
 }
