@@ -146,6 +146,105 @@ calls. In order to run the tests, simply run:
 make test
 ```
 
+If you have gotten this far and the test succeeded, we can continue
+with a simple example. For the impatient, just look at this
+[example](examples/singleInfo/singleInfo.cpp) and the other examples
+in the [examples directory](examples).
+
+We're going to create a Redis instance, using redis-plus-plus:
+
+```C++
+#include <iostream>
+#include <redismods++/BloomFilter.h>
+
+int main() {
+
+    // Setup the connection options.
+    sw::redis::ConnectionOptions opts;
+    opts.host = "127.0.0.1";
+    opts.port = 6379;
+    opts.password = "";
+
+    // Choose the instance type.
+    using RedisInstance = sw::redis::Redis;
+    // use RedisInstance = sw::redis::RedisCluster;
+
+    // Create a redis-plus-plus object.
+    RedisInstance redis(opts);
+
+    // Create a BloomFilter object.
+    redis::module::BloomFilter<RedisInstance> bloomFilter(redis);
+
+    getInfo<RedisInstance>("some_test_key", bloomFilter, redis);
+
+    return 0;
+}
+```
+
+Now we'll implement the getInfo() template function. BTW, it needs to
+be a template function, as we're keeping the option open to use it on
+non-clustered, as well as clustered Redis servers.
+
+```C++
+#include <unordered_map>
+
+template <typename RedisInstance>
+void
+getInfo(const std::string &key,
+        redis::module::BloomFilter<RedisInstance> &bloomFilter,
+        RedisInstance &redis)
+{
+    // Make sure the key does not exist.
+    // Note: The BloomFilter object does not have a 'del' call,
+    //       so we need to call the native redis 'DEL' command
+    //       via the underlying redis-plus-plus lib.
+    redis.del(key);
+
+    // Create a BloomFilter.
+    bloomFilter.reserve(key, 0.1, 100, false);
+
+    // Prepare the output buffer.
+    std::unordered_map<std::string, sw::redis::OptionalLongLong> output;
+    bloomFilter.info(key, output);
+
+    // Print the result.
+    for (auto &item : output) {
+        std::cout << item.first << ": ";
+        if (item.second) {
+            std::cout << *item.second;
+        }
+        else {
+            std::cout << "nil";
+        }
+        std::cout << std::endl;
+    }
+
+    // Clean up.
+    redis.del(key);
+}
+```
+
+We now need to compile it. Note that we need to linking in the hiredis,
+redis++ and pthread libraries. The hiredis and redis++ libraries are
+installed in the `${REDIS_PLUS_PLUS_MODULES_DIR}/lib` directory. All
+include files are in the `${REDIS_PLUS_PLUS_MODULES_DIR}/include`
+directory.
+
+```console
+$ g++ -I${REDIS_PLUS_PLUS_MODULES_DIR}/include -L${REDIS_PLUS_PLUS_MODULES_DIR}/lib -o singleInfo singleInfo.cpp -lhiredis -lredis++ -lpthread
+```
+
+Finally, we can run it:
+
+```console
+$ LD_LIBRARY_PATH=../../lib ./singleInfo
+Expansion rate: 2
+Number of items inserted: 0
+Size: 232
+Number of filters: 1
+Capacity: 100
+```
+
 ## Code Documentation
 
 A [Doxygen](https://www.doxygen.nl/) configuration file,
@@ -174,7 +273,6 @@ find the generated Doxygen output files.
 
   - Finish the RedisGraph implementation
   - Clean-up API and release the first version
-  - Add some examples
   - Install procedure and at least a Debian package
   - Add APIs for: RediSearch, RedisTimeSeries, RedisAI and RedisGears
   - Add the hackathlon video
