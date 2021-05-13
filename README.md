@@ -53,7 +53,7 @@ GNU/Automake is used as building tool and g++ is used for building.
 
 ```shell
 git clone https://github.com/wingunder/redis-plus-plus-modules.git
-cd
+cd redis-plus-plus-modules
 ./bootstrap.sh
 ./configure
 make -j8
