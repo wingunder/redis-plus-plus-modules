@@ -1,4 +1,4 @@
-# redis-plus-plus-modules
+![redis-plus-plus-modules](images/redis-plus-plus-modules.png)
 
 - [Introduction](#introduction)
 - [Motivation](#motivation)
