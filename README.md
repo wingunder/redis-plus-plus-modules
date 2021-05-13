@@ -237,7 +237,7 @@ $ g++ -I${REDIS_PLUS_PLUS_MODULES_DIR}/include -L${REDIS_PLUS_PLUS_MODULES_DIR}/
 Finally, we can run it:
 
 ```console
-$ LD_LIBRARY_PATH=../../lib ./singleInfo
+$ LD_LIBRARY_PATH=$REDIS_PLUS_PLUS_MODULES_DIR/lib ./singleInfo
 Expansion rate: 2
 Number of items inserted: 0
 Size: 232
