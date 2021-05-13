@@ -55,11 +55,9 @@ classes. This means that there is no library to link with. The only
 requirement is that one or more of the desired header files are
 included:
 
-  - [#include &lt;redismods++/BloomCuckooBase.h&gt;](include/redismods++/BloomCuckooBase.h)
   - [#include &lt;redismods++/BloomFilter.h&gt;](include/redismods++/BloomFilter.h)
   - [#include &lt;redismods++/CountMinSketch.h&gt;](include/redismods++/CountMinSketch.h)
   - [#include &lt;redismods++/CuckooFilter.h&gt;](include/redismods++/CuckooFilter.h)
-  - [#include &lt;redismods++/RedisGraph.h&gt;](include/redismods++/RedisGraph.h)
   - [#include &lt;redismods++/RedisJSON.h&gt;](include/redismods++/RedisJSON.h)
   - [#include &lt;redismods++/TopK.h&gt;](include/redismods++/TopK.h)
 
