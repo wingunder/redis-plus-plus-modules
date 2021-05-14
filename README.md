@@ -4,7 +4,7 @@
 - [Motivation](#motivation)
 - [Design](#design)
 - [Building](#building)
-- [Quick start](#quickstart)
+- [Quickstart](#quickstart)
 - [APIs](#apis)
 - [TODO](#todo)
 - [Contributing](#contributing)
@@ -82,7 +82,7 @@ Tests can be performed by running:
 make test
 ```
 
-## Quick start
+## Quickstart
 
 First of all you'll need to have access to a Redis database with the
 module(s) loaded, that you'd like to program against. The fastest way
