@@ -84,24 +84,92 @@ make test
 
 ## Quickstart
 
-First of all you'll need to have access to a Redis database with the
-module(s) loaded, that you'd like to program against. The fastest way
-to get started with this is to simply head off to
-[redismod](https://github.com/RedisLabsModules/redismod) and follow
-their instructions to get a docker image installed and running, which
-will supply this.
+### Quickstart using Docker
 
-The following commands, adapted from the [RedisLabs redismod
-docker page](https://hub.docker.com/r/redislabs/redismod) should start
-a docker image that contains all relevant modules:
+The fastest way to get started, is to simply use
+[Docker](https://www.docker.com/) and docker-compose. A
+[Dockerfile](https://raw.githubusercontent.com/wingunder/redis-plus-plus-modules/master/Dockerfile)
+and a simple
+[docker-compose.yml](https://raw.githubusercontent.com/wingunder/redis-plus-plus-modules/master/docker-compose.yml)
+file is supplied.
 
+Optionally you could start off, by building the Docker image called
+rppm (short for redis-plus-plus-modules). This step is not needed, but
+just demostrates that building a pure Docker image of this library is
+possible.
 ```console
-$ docker pull redislabs/redismod
-$ docker run -p 6379:6379 redislabs/redismod
+$ docker build . -t rppm:0
 ```
 
+For running applications inside Docker, you need to use
+docker-compose. The following demonstrates the running of the unit
+tests and some examples, inside Docker.
+```console
+$ docker-compose up -d
+Starting redis-plus-plus-modules_redis_1 ... done
+Starting redis-plus-plus-modules_test_1       ... done
+Creating redis-plus-plus-modules_multi_info_1  ... done
+Creating redis-plus-plus-modules_single_info_1 ... done
+```
+
+To view the logs of the `test` example, simply run:
+```console
+$ docker-compose logs test
+```
+
+To view the logs of the `singleInfo` example, simply run:
+```console
+$ docker-compose logs single_info
+Attaching to redis-plus-plus-modules_single_info_1
+single_info_1  | make: Entering directory
+'/usr/src/redis-plus-plus-modules/examples/singleInfo'
+single_info_1  | g++ -I../../include -L../../lib -o singleInfo
+singleInfo.cpp -lhiredis -lredis++ -lpthread
+single_info_1  | make: Leaving directory
+'/usr/src/redis-plus-plus-modules/examples/singleInfo'
+single_info_1  | Expansion rate: 2
+single_info_1  | Number of items inserted: 0
+single_info_1  | Capacity: 100
+single_info_1  | Number of filters: 1
+single_info_1  | Size: 232
+```
+
+To view the logs of the `multiInfo` example, simply run:
+```console
+$ docker-compose logs multi_info
+Attaching to redis-plus-plus-modules_multi_info_1
+multi_info_1   | make: Entering directory
+'/usr/src/redis-plus-plus-modules/examples/multiInfo'
+multi_info_1   | g++ -I../../include -L../../lib -o multiInfo
+multiInfo.cpp -lhiredis -lredis++ -lpthread
+multi_info_1   | make: Leaving directory
+'/usr/src/redis-plus-plus-modules/examples/multiInfo'
+multi_info_1   | Expansion rate: 2
+multi_info_1   | Number of items inserted: 0
+multi_info_1   | Capacity: 100
+multi_info_1   | Number of filters: 1
+multi_info_1   | Size: 232
+multi_info_1   | Max iterations: 0
+multi_info_1   | Expansion rate: 1
+multi_info_1   | Number of buckets: 16
+multi_info_1   | Number of filters: 1
+multi_info_1   | Number of items inserted: 0
+multi_info_1   | Number of items deleted: 0
+multi_info_1   | Size: 216
+multi_info_1   | Bucket size: 10
+```
+
+You can now use the docker-compose.yml file and beef it up with your
+own application(s).
+
+### Quickstart without using Docker
+
+First of all you'll need to have access to a Redis database with the
+_loaded_ module(s) that you'd like to program against.
+
 Once your Redis database is set up and running, you can run the
-`MODULE LIST` command on it:
+`MODULE LIST` command on it, in order to see if the modules are
+available:
 ```console
 $ redis-cli MODULE LIST
 1) 1) "name"
@@ -222,7 +290,7 @@ getInfo(const std::string &key,
 }
 ```
 
-We now need to compile it. Note that we need to linking in the hiredis,
+We now need to compile it. Note that we need to link with the hiredis,
 redis++ and pthread libraries. The hiredis and redis++ libraries are
 installed in the `${REDIS_PLUS_PLUS_MODULES_DIR}/lib` directory. All
 include files are in the `${REDIS_PLUS_PLUS_MODULES_DIR}/include`
@@ -258,6 +326,9 @@ find the generated Doxygen output files.
 
 ## APIs
 
+NOTE: This project is still under heavy development. Although a lot of
+effort will go into keeping the API stable, it is not guaranteed.
+
 ### RedisBloom API Documentation
 
   - [BloomFilter](docs/BloomFilter.md)
@@ -271,16 +342,13 @@ find the generated Doxygen output files.
 
   - Finish the RedisGraph implementation
   - Clean-up API and release the first version
-  - Install procedure and at least a Debian package
   - Add APIs for: RediSearch, RedisTimeSeries, RedisAI and RedisGears
-  - Add the hackathlon video
+  - Install procedure and at least a Debian package
 
 ## Contributing
 
-In principle, contributions are welcome, however this project is in a
-seriously heavy development phase and everything can still change. So,
-at the moment I'll not be accepting any pull requests. But feel free
-to open issues and reviews.
+Contributions are very welcome. Also please feel free to open issues
+and post reviews.
 
 ## Authors
 

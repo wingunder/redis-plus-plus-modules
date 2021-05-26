@@ -1,0 +1,30 @@
+version: "3.9"
+services:
+    redis:
+        image: "redislabs/redismod:latest"
+        ports:
+            - 6379:6379
+    test:
+        build: .
+        environment:
+            - LD_LIBRARY_PATH=./lib
+        command: make test
+        network_mode: host
+        depends_on:
+            - redis
+    multi_info:
+        build: .
+        environment:
+            - LD_LIBRARY_PATH=./lib
+        command: bash -c "make -C examples/multiInfo && examples/multiInfo/multiInfo"
+        network_mode: host
+        depends_on:
+            - redis
+    single_info:
+        build: .
+        environment:
+            - LD_LIBRARY_PATH=./lib
+        command: bash -c "make -C examples/singleInfo && examples/singleInfo/singleInfo"
+        network_mode: host
+        depends_on:
+            - redis
